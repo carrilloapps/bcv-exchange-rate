@@ -19,6 +19,15 @@ export interface RequestOptions {
  * @extends RequestOptions
  */
 export interface BcvParams extends RequestOptions {
+    /**
+     * Specific currency code(s) to return (e.g., 'USD' or ['USD', 'EUR']).
+     * Defaults to all available if omitted.
+     */
+    currencies?: string | string[];
+    /** Whether to include current rates from the main page. Default: true */
+    includeCurrent?: boolean;
+    /** Whether to include historical bank rates. Default: true */
+    includeHistory?: boolean;
     /** Range of days for historical bank rates. Default: 7 */
     days?: number;
     /** Page number for results pagination. Default: 0 */
@@ -106,6 +115,15 @@ export interface TrmResponse {
  * @throws {Error} If the main site is unreachable or parsing fails.
  */
 export declare function getBcvRates(params?: BcvParams): Promise<BcvResponse>;
+/**
+ * Fetches only the historical/informative bank rates from BCV.
+ *
+ * @async
+ * @function getBcvHistory
+ * @param {BcvParams} [params={}] - Query parameters and request options
+ * @returns {Promise<Pick<BcvResponse, 'history' | 'pagination'>>} Historical bank rates data
+ */
+export declare function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination'>>;
 /**
  * Fetches the official Representative Market Rate (TRM) from Colombia's Open Data API.
  *

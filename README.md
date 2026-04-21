@@ -3,18 +3,17 @@
 [![npm version](https://img.shields.io/npm/v/bcv-exchange-rate.svg)](https://www.npmjs.com/package/bcv-exchange-rate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**bcv-exchange-rate** es una solución robusta y profesional de Node.js diseñada para el monitoreo en tiempo real de indicadores económicos oficiales en el eje fronterizo venezolano-colombiano. 
-
-Esta librería integra de forma nativa las tasas del **Banco Central de Venezuela (BCV)** y la **Tasa Representativa del Mercado (TRM) de Colombia**, permitiendo a desarrolladores y empresas venezolanas acceder a datos financieros críticos sin depender de APIs de terceros costosas o intermediarios inestables.
+**bcv-exchange-rate** es una solución profesional de Node.js para el monitoreo en tiempo real de indicadores económicos oficiales en Venezuela y Colombia. Esta librería extrae datos directamente del **Banco Central de Venezuela (BCV)** y de la **Tasa Representativa del Mercado (TRM)** de Colombia, facilitando la integración financiera en aplicaciones que requieren datos oficiales y actualizados.
 
 ## 🌟 Características Principales
 
-- **Integración Transfronteriza:** Mapeo simultáneo de indicadores en Bolívares (VES) y Pesos Colombianos (COP).
-- **Extracción Directa (Scraping):** Conexión nativa con `bcv.org.ve` para obtener USD, EUR, CNY, TRY, RUB.
-- **Histórico Bancario Avanzado:** Acceso a los registros de compra/venta de las instituciones bancarias de Venezuela de los últimos días.
-- **API Oficial de Colombia:** Integración directa con `datos.gov.co` para obtener la TRM de la Superintendencia Financiera.
-- **Observabilidad:** Logging estructurado con `winston` para entornos de producción.
-- **Resiliencia SSL:** Soporte para omitir validación de certificados en sitios gubernamentales inestables.
+- **Multi-indicador:** Obtiene tasas oficiales de USD, EUR, CNY, TRY y RUB.
+- **Historial Bancario:** Acceso detallado a las tasas de compra y venta de las instituciones bancarias en Venezuela.
+- **Filtrado de Monedas:** Capacidad de solicitar únicamente las monedas de interés (ej. solo USD).
+- **Carga Selectiva:** Opciones para omitir la carga del historial o de las tasas actuales para optimizar el rendimiento.
+- **Paginación Avanzada:** Función dedicada para la recuperación de historial bancario con soporte para paginación.
+- **Observabilidad:** Soporte nativo para inyección de loggers (`winston`) y logs estructurados.
+- **Resiliencia:** Manejo automático de certificados SSL inestables en portales gubernamentales.
 
 ## 📦 Instalación
 
@@ -24,108 +23,106 @@ npm install bcv-exchange-rate
 
 ## 🚀 Guía de Uso
 
-### Inicialización
+### Configuración Básica
 
 ```javascript
-const { getBcvRates, getTrmRates } = require('bcv-exchange-rate');
+const { getBcvRates, getTrmRates, getBcvHistory } = require('bcv-exchange-rate');
 ```
 
-### Monitoreo de Tasas del BCV (Venezuela)
+### Consultar Tasas del BCV (Venezuela)
 
-Obtenga la tasa oficial vigente y el historial de transacciones bancarias del mercado cambiario venezolano.
+Por defecto, retorna las tasas actuales y el historial de los últimos 7 días.
 
 ```javascript
-async function fetchVenezuelaData() {
-    try {
-        // days: Define el rango de días para el histórico bancario (por defecto 7 días)
-        const bcv = await getBcvRates({ days: 7 });
+async function ejemploBcv() {
+    // Ejemplo: Solo traer USD y omitir historial para mayor rapidez
+    const bcv = await getBcvRates({ 
+        currencies: 'USD', 
+        includeHistory: false 
+    });
 
-        console.log(`USD Oficial: ${bcv.current.USD} VES`);
-        console.log(`Fecha de vigencia: ${bcv.effectiveDate}`);
-        
-        // Histórico por instituciones bancarias (Compra/Venta)
-        bcv.history.forEach(record => {
-            console.log(`[${record.date}] ${record.bank}: Compra:${record.buy} | Venta:${record.sell}`);
-        });
-    } catch (error) {
-        console.error('Error al consultar el BCV:', error.message);
+    console.log(`Tasa USD: ${bcv.current.USD} VES`);
+    console.log(`Vigencia: ${bcv.effectiveDate}`);
+}
+```
+
+### Consultar Historial Bancario Paginado
+
+Ideal para auditorías o reportes que requieren datos históricos extensos.
+
+```javascript
+async function ejemploHistorial() {
+    // Obtener la página 2 del historial de los últimos 15 días
+    const data = await getBcvHistory({ 
+        days: 15, 
+        page: 2 
+    });
+
+    data.history.forEach(record => {
+        console.log(`${record.date} | ${record.bank} | Compra: ${record.buy}`);
+    });
+
+    if (data.pagination.hasNextPage) {
+        console.log("Hay más páginas disponibles...");
     }
 }
 ```
 
-### Monitoreo de TRM de Colombia (COP)
-
-Acceda a la tasa oficial del peso colombiano respecto al dólar estadounidense, vital para operaciones fronterizas.
+### Consultar TRM (Colombia)
 
 ```javascript
-async function fetchColombiaData() {
-    try {
-        const trm = await getTrmRates({ limit: 5 });
-        console.log(`TRM Actual: $${trm.current.value} COP`);
-        console.log(`Vigencia hasta: ${trm.current.validityDate}`);
-    } catch (error) {
-        console.error('Error al consultar la TRM:', error.message);
-    }
+async function ejemploTrm() {
+    const trm = await getTrmRates({ limit: 1 });
+    console.log(`TRM Actual: $${trm.current.value} COP`);
 }
 ```
 
-## 📊 Estructura de Datos (Resultados)
+## ⚙️ Referencia de la API (BcvParams)
 
-### BCV
-```json
-{
-  "current": { "USD": 481.6989, "EUR": 567.58, ... },
-  "effectiveDate": "2026-04-21T00:00:00-04:00",
-  "history": [
-    { "date": "20-04-2026", "bank": "Banesco", "buy": 537.77, "sell": 481.95 }
-  ]
-}
-```
-
-### TRM
-```json
-{
-  "current": { "value": 3573.30, "unit": "COP", "validityDate": "2026-04-21" },
-  "history": [ ... ]
-}
-```
-
-## ⚙️ Parametrización y Opciones
-
-Ambas funciones principales aceptan un objeto de opciones para personalizar la consulta:
-
-### Opciones Comunes
 | Propiedad | Tipo | Descripción | Por Defecto |
 |-----------|------|-------------|---------|
-| `strictSSL` | `boolean` | Si es `false`, permite la conexión a sitios con certificados SSL vencidos o ausentes. | `false` |
-| `timeout` | `number` | Tiempo máximo de espera en milisegundos. | `25000` |
-| `userAgent` | `string` | User-agent personalizado para las peticiones HTTP. | (Chrome 125) |
-| `logger` | `object` | Instancia personalizada de winston para logs de la librería. | (Silent Console) |
+| `currencies` | `string \| string[]` | Filtra las monedas retornadas (ej: `'USD'` o `['USD', 'EUR']`). | Todas |
+| `includeCurrent` | `boolean` | Indica si debe consultar la página principal del BCV. | `true` |
+| `includeHistory` | `boolean` | Indica si debe consultar el historial bancario. | `true` |
+| `days` | `number` | Rango de días para el historial bancario. | `7` |
+| `page` | `number` | Número de página para el historial. | `0` |
+| `strictSSL` | `boolean` | Si es `false`, ignora errores de certificados SSL. | `false` |
+| `timeout` | `number` | Tiempo máximo de espera en ms. | `25000` |
+| `logger` | `Logger` | Instancia de logger compatible con winston. | Console |
 
-### Parámetros de `getBcvRates`
-```javascript
-const options = {
-  days: 15,    // Días de histórico bancario a recuperar
-  page: 1,      // Número de página para navegación (paginación)
-  strictSSL: false
-};
-const bcv = await getBcvRates(options);
+## 📊 Estructura de Respuesta (BcvResponse)
+
+```typescript
+{
+  current: { [key: string]: number }, // Tasas actuales filtradas
+  effectiveDate: string,              // Fecha de vigencia oficial
+  history: [                          // Lista de tasas bancarias
+    { date: string, bank: string, buy: number, sell: number }
+  ],
+  pagination: {
+    currentPage: number,
+    hasNextPage: boolean
+  }
+}
 ```
 
-## 🛡️ Soporte SSL y Entornos Inestables
+## 🛡️ Logging y Observabilidad
 
-Debido a que los portales gubernamentales venezolanos suelen presentar intermitencias en sus certificados SSL, esta librería incluye por defecto `strictSSL: false`. Esto asegura que el scraping no se detenga por errores de certificado auto-firmado o vencido, garantizando la continuidad del servicio en aplicaciones críticas de Venezuela.
+Puedes integrar tu propio logger para monitorear las peticiones en producción:
+
+```javascript
+const winston = require('winston');
+const logger = winston.createLogger({ ... });
+
+const rates = await getBcvRates({ logger });
+```
 
 ## 👤 Autor
 
 **José Carrillo**
 - Sitio Web: [carrillo.app](https://carrillo.app)
-- Tech Lead & Desarrollador Fullstack.
-- Contacto: [m@carrillo.app](mailto:m@carrillo.app)
+- Tech Lead & Fullstack Developer.
 
 ## ⚖️ Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulte el archivo [LICENSE](LICENSE) para más información.
-
----
-*Desarrollado para fortalecer la transparencia financiera y la integración en el eje fronterizo.*
+Este proyecto está bajo la Licencia MIT.

@@ -41,6 +41,15 @@ export interface RequestOptions {
  * @extends RequestOptions
  */
 export interface BcvParams extends RequestOptions {
+    /** 
+     * Specific currency code(s) to return (e.g., 'USD' or ['USD', 'EUR']).
+     * Defaults to all available if omitted.
+     */
+    currencies?: string | string[];
+    /** Whether to include current rates from the main page. Default: true */
+    includeCurrent?: boolean;
+    /** Whether to include historical bank rates. Default: true */
+    includeHistory?: boolean;
     /** Range of days for historical bank rates. Default: 7 */
     days?: number;
     /** Page number for results pagination. Default: 0 */
@@ -170,11 +179,82 @@ export async function getBcvRates(params: BcvParams = {}): Promise<BcvResponse> 
     const activeLogger = params.logger || logger;
     const days = params.days || 7;
     const page = params.page || 0;
+    const includeCurrent = params.includeCurrent !== undefined ? params.includeCurrent : true;
+    const includeHistory = params.includeHistory !== undefined ? params.includeHistory : true;
+    const currencies = params.currencies;
     const config = getAxiosConfig(params);
 
-    activeLogger.info('Starting BCV exchange rate extraction', { days, page });
+    activeLogger.info('Starting BCV exchange rate extraction', { days, page, includeCurrent, includeHistory });
 
-    const urlMain = 'https://www.bcv.org.ve/';
+    const response: BcvResponse = {
+        current: {},
+        effectiveDate: '',
+        history: [],
+        pagination: {
+            currentPage: page,
+            hasNextPage: false
+        }
+    };
+
+    if (includeCurrent) {
+        try {
+            const urlMain = 'https://www.bcv.org.ve/';
+            activeLogger.debug('Fetching BCV main page', { url: urlMain });
+            const mainRes = await axios.get(urlMain, config);
+            const $ = cheerio.load(mainRes.data);
+            const currencyMap: { [key: string]: string } = { 'dolar': 'USD', 'euro': 'EUR', 'yuan': 'CNY', 'lira': 'TRY', 'rublo': 'RUB' };
+
+            const requestedCurrencies = currencies 
+                ? (Array.isArray(currencies) ? currencies : [currencies]) 
+                : null;
+
+            for (const [id, label] of Object.entries(currencyMap)) {
+                if (requestedCurrencies && !requestedCurrencies.includes(label)) continue;
+
+                const container = $(`#${id}`);
+                if (container.length) {
+                    const rateText = container.find('strong').text().trim();
+                    const rate = parseVenezuelanNumber(rateText);
+                    if (rate !== null) {
+                        response.current[label] = rate;
+                        activeLogger.debug(`Parsed rate: ${label}`, { rate });
+                    }
+                }
+            }
+            response.effectiveDate = $('.date-display-single').first().attr('content') || $('.date-display-single').first().text().trim();
+        } catch (error: any) {
+            activeLogger.error('Failure in BCV main page extraction', { error: error.message });
+            if (!includeHistory) throw new Error(`Error obteniendo tasas BCV: ${error.message}`);
+        }
+    }
+
+    if (includeHistory) {
+        try {
+            const historyData = await getBcvHistory({ ...params, logger: activeLogger });
+            response.history = historyData.history;
+            response.pagination = historyData.pagination;
+        } catch (e: any) {
+            activeLogger.error('Failed to retrieve BCV historical bank rates in getBcvRates', { error: e.message });
+        }
+    }
+
+    return response;
+}
+
+/**
+ * Fetches only the historical/informative bank rates from BCV.
+ * 
+ * @async
+ * @function getBcvHistory
+ * @param {BcvParams} [params={}] - Query parameters and request options
+ * @returns {Promise<Pick<BcvResponse, 'history' | 'pagination'>>} Historical bank rates data
+ */
+export async function getBcvHistory(params: BcvParams = {}): Promise<Pick<BcvResponse, 'history' | 'pagination'>> {
+    const activeLogger = params.logger || logger;
+    const days = params.days || 7;
+    const page = params.page || 0;
+    const config = getAxiosConfig(params);
+
     const today = new Date();
     const startDate = new Date();
     startDate.setDate(today.getDate() - days);
@@ -190,66 +270,40 @@ export async function getBcvRates(params: BcvParams = {}): Promise<BcvResponse> 
         urlHistory += `&page=${page}`;
     }
 
+    let history: BcvBankRate[] = [];
+    let hasNextPage = false;
+
     try {
-        activeLogger.debug('Fetching BCV main page', { url: urlMain });
-        const mainRes = await axios.get(urlMain, config);
-        const $ = cheerio.load(mainRes.data);
-        const current: { [key: string]: number } = {};
-        const currencyMap: { [key: string]: string } = { 'dolar': 'USD', 'euro': 'EUR', 'yuan': 'CNY', 'lira': 'TRY', 'rublo': 'RUB' };
-
-        for (const [id, label] of Object.entries(currencyMap)) {
-            const container = $(`#${id}`);
-            if (container.length) {
-                const rateText = container.find('strong').text().trim();
-                const rate = parseVenezuelanNumber(rateText);
-                if (rate !== null) {
-                    current[label] = rate;
-                    activeLogger.debug(`Parsed rate: ${label}`, { rate });
-                }
+        activeLogger.debug('Fetching BCV historical bank rates', { url: urlHistory });
+        const histRes = await axios.get(urlHistory, config);
+        const $h = cheerio.load(histRes.data);
+        
+        $h('table.views-table tbody tr').each((_, row) => {
+            const cells = $h(row).find('td');
+            if (cells.length >= 4) {
+                history.push({
+                    date: $h(cells[0]).text().trim(),
+                    bank: $h(cells[1]).text().trim(),
+                    buy: parseVenezuelanNumber($h(cells[2]).text().trim()),
+                    sell: parseVenezuelanNumber($h(cells[3]).text().trim())
+                });
             }
-        }
+        });
 
-        const effectiveDate = $('.date-display-single').first().attr('content') || $('.date-display-single').first().text().trim();
-
-        let history: BcvBankRate[] = [];
-        let hasNextPage = false;
-
-        try {
-            activeLogger.debug('Fetching BCV historical bank rates', { url: urlHistory });
-            const histRes = await axios.get(urlHistory, config);
-            const $h = cheerio.load(histRes.data);
-            
-            $h('table.views-table tbody tr').each((_, row) => {
-                const cells = $h(row).find('td');
-                if (cells.length >= 4) {
-                    history.push({
-                        date: $h(cells[0]).text().trim(),
-                        bank: $h(cells[1]).text().trim(),
-                        buy: parseVenezuelanNumber($h(cells[2]).text().trim()),
-                        sell: parseVenezuelanNumber($h(cells[3]).text().trim())
-                    });
-                }
-            });
-
-            hasNextPage = $h('.pager-next').length > 0;
-            activeLogger.info(`Successfully retrieved ${history.length} bank rates`, { hasNextPage });
-        } catch (e: any) {
-            activeLogger.error('Failed to retrieve BCV historical bank rates', { error: e.message });
-        }
-
-        return { 
-            current, 
-            effectiveDate, 
-            history,
-            pagination: {
-                currentPage: page,
-                hasNextPage
-            }
-        };
-    } catch (error: any) {
-        activeLogger.error('Critical failure in BCV extraction', { error: error.message });
-        throw new Error(`Error obteniendo tasas BCV: ${error.message}`);
+        hasNextPage = $h('.pager-next').length > 0;
+        activeLogger.info(`Successfully retrieved ${history.length} bank rates`, { hasNextPage });
+    } catch (e: any) {
+        activeLogger.error('Failed to retrieve BCV historical bank rates', { error: e.message });
+        throw new Error(`Error obteniendo historial BCV: ${e.message}`);
     }
+
+    return {
+        history,
+        pagination: {
+            currentPage: page,
+            hasNextPage
+        }
+    };
 }
 
 /**

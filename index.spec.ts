@@ -1,6 +1,6 @@
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { getBcvRates, getTrmRates } from './index';
+import { getBcvRates, getTrmRates, getBcvHistory } from './index';
 
 const mock = new MockAdapter(axios);
 
@@ -42,7 +42,56 @@ describe('bcv-exchange-rate library', () => {
       expect(result.pagination.hasNextPage).toBe(true);
     });
 
-    it('should handle errors in historical data gracefully', async () => {
+    it('should filter currencies in BCV current rates', async () => {
+      const htmlMain = `
+        <div id="dolar"><strong>48,16</strong></div>
+        <div id="euro"><strong>51,20</strong></div>
+      `;
+      mock.onGet('https://www.bcv.org.ve/').reply(200, htmlMain);
+      mock.onGet(/tasas-informativas-sistema-bancario/).reply(200, '<table></table>');
+
+      const result = await getBcvRates({ currencies: 'USD' });
+      expect(result.current.USD).toBe(48.16);
+      expect(result.current.EUR).toBeUndefined();
+
+      const resultArr = await getBcvRates({ currencies: ['EUR'] });
+      expect(resultArr.current.EUR).toBe(51.2);
+      expect(resultArr.current.USD).toBeUndefined();
+    });
+
+    it('should skip sections based on includeCurrent and includeHistory', async () => {
+      mock.onGet('https://www.bcv.org.ve/').reply(200, '<div id="dolar"><strong>48</strong></div>');
+      mock.onGet(/tasas-informativas-sistema-bancario/).reply(200, '<table></table>');
+
+      const onlyCurrent = await getBcvRates({ includeHistory: false });
+      expect(onlyCurrent.current.USD).toBe(48);
+      expect(onlyCurrent.history).toHaveLength(0);
+
+      const onlyHistory = await getBcvRates({ includeCurrent: false });
+      expect(Object.keys(onlyHistory.current)).toHaveLength(0);
+    });
+
+    it('should fetch only history using getBcvHistory', async () => {
+      const htmlHistory = `
+        <table class="views-table">
+          <tbody>
+            <tr>
+              <td>21-04-2026</td>
+              <td>Banco Hist</td>
+              <td>48,00</td>
+              <td>49,00</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      mock.onGet(/tasas-informativas-sistema-bancario/).reply(200, htmlHistory);
+
+      const result = await getBcvHistory();
+      expect(result.history).toHaveLength(1);
+      expect(result.history[0].bank).toBe('Banco Hist');
+    });
+
+    it('should handle errors in historical data gracefully when requested via getBcvRates', async () => {
       const htmlMain = '<div id="dolar"><strong>48,16</strong></div>';
       mock.onGet('https://www.bcv.org.ve/').reply(200, htmlMain);
       mock.onGet(/tasas-informativas-sistema-bancario/).reply(500);
@@ -52,9 +101,14 @@ describe('bcv-exchange-rate library', () => {
       expect(result.history).toHaveLength(0);
     });
 
+    it('should throw error in getBcvHistory if request fails', async () => {
+      mock.onGet(/tasas-informativas-sistema-bancario/).reply(500);
+      await expect(getBcvHistory()).rejects.toThrow('Error obteniendo historial BCV');
+    });
+
     it('should throw error if main site fails', async () => {
       mock.onGet('https://www.bcv.org.ve/').reply(500);
-      await expect(getBcvRates()).rejects.toThrow('Error obteniendo tasas BCV');
+      await expect(getBcvRates({ includeHistory: false })).rejects.toThrow('Error obteniendo tasas BCV');
     });
   });
 
