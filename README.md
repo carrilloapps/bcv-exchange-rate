@@ -1,128 +1,119 @@
-# BCV Exchange Rate (bcv-exchange-rate) 📊
+# bcv-exchange-rate
 
-[![npm version](https://img.shields.io/npm/v/bcv-exchange-rate.svg)](https://www.npmjs.com/package/bcv-exchange-rate)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/bcv-exchange-rate.svg?logo=npm)](https://www.npmjs.com/package/bcv-exchange-rate)
+[![npm downloads](https://img.shields.io/npm/dm/bcv-exchange-rate.svg?logo=npm)](https://www.npmjs.com/package/bcv-exchange-rate)
+[![CI](https://github.com/carrilloapps/bcv-exchange-rate/actions/workflows/ci.yml/badge.svg)](https://github.com/carrilloapps/bcv-exchange-rate/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/carrilloapps/bcv-exchange-rate/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/node/v/bcv-exchange-rate.svg?logo=node.js&logoColor=white)](https://nodejs.org)
 
-**bcv-exchange-rate** es una solución profesional de Node.js para el monitoreo en tiempo real de indicadores económicos oficiales en Venezuela y Colombia. Esta librería extrae datos directamente del **Banco Central de Venezuela (BCV)** y de la **Tasa Representativa del Mercado (TRM)** de Colombia, facilitando la integración financiera en aplicaciones que requieren datos oficiales y actualizados.
+Librería profesional de Node.js para consultar indicadores económicos oficiales de **Venezuela (BCV)** y **Colombia (TRM)**. Extrae datos directamente del Banco Central de Venezuela y del portal de datos abiertos del Gobierno de Colombia, con tipado estricto, retries con backoff, caché en memoria opcional, jerarquía de errores tipada y logger duck-typed sin dependencias forzadas.
 
-## 🌟 Características Principales
+---
 
-- **Multi-indicador:** Obtiene tasas oficiales de USD, EUR, CNY, TRY y RUB.
-- **Historial Bancario:** Acceso detallado a las tasas de compra y venta de las instituciones bancarias en Venezuela.
-- **Filtrado de Monedas:** Capacidad de solicitar únicamente las monedas de interés (ej. solo USD).
-- **Carga Selectiva:** Opciones para omitir la carga del historial o de las tasas actuales para optimizar el rendimiento.
-- **Paginación Avanzada:** Función dedicada para la recuperación de historial bancario con soporte para paginación.
-- **Observabilidad:** Soporte nativo para inyección de loggers (`winston`) y logs estructurados.
-- **Resiliencia:** Manejo automático de certificados SSL inestables en portales gubernamentales.
+## Características
 
-## 📦 Instalación
+- **Multi-indicador.** Tasas oficiales del BCV (`USD`, `EUR`, `CNY`, `TRY`, `RUB`) y TRM de Colombia (`COP`).
+- **Historial bancario paginado.** Tasas de compra y venta por institución financiera venezolana.
+- **Reintentos automáticos** con backoff exponencial configurable.
+- **Caché en memoria** con TTL por llamada y _stale-while-error_ opcional.
+- **Jerarquía de errores tipada** (`NetworkError`, `TrmApiError`, `ValidationError`).
+- **Logger basado en interfaz.** Compatible con winston, pino, bunyan o console, sin dependencias forzadas.
+- **TLS seguro por defecto** (`strictSSL: true`), con desactivación explícita cuando sea necesario.
+- **Dual CJS/ESM** con declaraciones `.d.ts`.
+- **Estado por sección** (`status.current`, `status.history`) para detectar fallos parciales.
+- **Cobertura del 100 %** forzada en CI.
+
+## Instalación
 
 ```bash
 npm install bcv-exchange-rate
 ```
 
-## 🚀 Guía de Uso
+Requiere **Node.js 18 LTS o superior**. Si usas winston como logger (opcional):
 
-### Configuración Básica
-
-```javascript
-const { getBcvRates, getTrmRates, getBcvHistory } = require('bcv-exchange-rate');
+```bash
+npm install winston
 ```
 
-### Consultar Tasas del BCV (Venezuela)
-
-Por defecto, retorna las tasas actuales y el historial de los últimos 7 días.
-
-```javascript
-async function ejemploBcv() {
-    // Ejemplo: Solo traer USD y omitir historial para mayor rapidez
-    const bcv = await getBcvRates({ 
-        currencies: 'USD', 
-        includeHistory: false 
-    });
-
-    console.log(`Tasa USD: ${bcv.current.USD} VES`);
-    console.log(`Vigencia: ${bcv.effectiveDate}`);
-}
-```
-
-### Consultar Historial Bancario Paginado
-
-Ideal para auditorías o reportes que requieren datos históricos extensos.
-
-```javascript
-async function ejemploHistorial() {
-    // Obtener la página 2 del historial de los últimos 15 días
-    const data = await getBcvHistory({ 
-        days: 15, 
-        page: 2 
-    });
-
-    data.history.forEach(record => {
-        console.log(`${record.date} | ${record.bank} | Compra: ${record.buy}`);
-    });
-
-    if (data.pagination.hasNextPage) {
-        console.log("Hay más páginas disponibles...");
-    }
-}
-```
-
-### Consultar TRM (Colombia)
-
-```javascript
-async function ejemploTrm() {
-    const trm = await getTrmRates({ limit: 1 });
-    console.log(`TRM Actual: $${trm.current.value} COP`);
-}
-```
-
-## ⚙️ Referencia de la API (BcvParams)
-
-| Propiedad | Tipo | Descripción | Por Defecto |
-|-----------|------|-------------|---------|
-| `currencies` | `string \| string[]` | Filtra las monedas retornadas (ej: `'USD'` o `['USD', 'EUR']`). | Todas |
-| `includeCurrent` | `boolean` | Indica si debe consultar la página principal del BCV. | `true` |
-| `includeHistory` | `boolean` | Indica si debe consultar el historial bancario. | `true` |
-| `days` | `number` | Rango de días para el historial bancario. | `7` |
-| `page` | `number` | Número de página para el historial. | `0` |
-| `strictSSL` | `boolean` | Si es `false`, ignora errores de certificados SSL. | `false` |
-| `timeout` | `number` | Tiempo máximo de espera en ms. | `25000` |
-| `logger` | `Logger` | Instancia de logger compatible con winston. | Console |
-
-## 📊 Estructura de Respuesta (BcvResponse)
+## Inicio rápido
 
 ```typescript
-{
-  current: { [key: string]: number }, // Tasas actuales filtradas
-  effectiveDate: string,              // Fecha de vigencia oficial
-  history: [                          // Lista de tasas bancarias
-    { date: string, bank: string, buy: number, sell: number }
-  ],
-  pagination: {
-    currentPage: number,
-    hasNextPage: boolean
-  }
+import { getBcvRates, getTrmRates } from 'bcv-exchange-rate';
+
+const bcv = await getBcvRates({ currencies: 'USD', includeHistory: false });
+console.log(`USD/VES: ${bcv.current.USD} (vigencia ${bcv.effectiveDate})`);
+
+const trm = await getTrmRates({ limit: 1 });
+console.log(`TRM: ${trm?.current.value} COP`);
+```
+
+Versión CommonJS:
+
+```javascript
+const { getBcvRates } = require('bcv-exchange-rate');
+```
+
+## Ejemplo con caché y reintentos
+
+```typescript
+const bcv = await getBcvRates({
+  currencies: ['USD', 'EUR'],
+  retries: 3,
+  retryDelayMs: 500,
+  cacheTtlMs: 60_000,
+  cacheStaleTtlMs: 10 * 60_000,
+});
+
+if (bcv.status.current === 'failed') {
+  console.warn('Tasa actual no disponible; se usa el historial como alternativa');
 }
 ```
 
-## 🛡️ Logging y Observabilidad
+## Documentación
 
-Puedes integrar tu propio logger para monitorear las peticiones en producción:
+La documentación extendida vive en [`docs/`](./docs/README.md):
 
-```javascript
-const winston = require('winston');
-const logger = winston.createLogger({ ... });
+### Primeros pasos
 
-const rates = await getBcvRates({ logger });
+- [Guía de inicio](./docs/getting-started.md)
+- [Ejemplos ejecutables](./docs/examples/README.md)
+
+### Referencia
+
+- [Referencia completa de la API](./docs/api-reference.md)
+- [Arquitectura interna](./docs/architecture.md)
+
+### Guías temáticas
+
+- [Logging y observabilidad](./docs/guides/logging.md)
+- [Manejo de errores](./docs/guides/errors.md)
+- [Caché y resiliencia](./docs/guides/caching.md)
+- [Reintentos y resiliencia](./docs/guides/retries.md)
+- [Seguridad y TLS](./docs/guides/security.md)
+- [Uso con TypeScript](./docs/guides/typescript.md)
+
+### Operaciones
+
+- [Solución de problemas](./docs/troubleshooting.md)
+
+## Desarrollo
+
+```bash
+npm install
+npm test             # Jest con 100 % de cobertura forzada
+npm run lint         # ESLint
+npm run format       # Prettier
+npm run build        # Dual CJS/ESM + declaraciones
 ```
 
-## 👤 Autor
+Más detalles en [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
-**José Carrillo**
-- Sitio Web: [carrillo.app](https://carrillo.app)
-- Tech Lead & Fullstack Developer.
+## Seguridad
 
-## ⚖️ Licencia
+Reporta vulnerabilidades según lo descrito en [`SECURITY.md`](./SECURITY.md). **No abras incidencias públicas** para problemas de seguridad.
 
-Este proyecto está bajo la Licencia MIT.
+## Licencia
+
+MIT © [José Carrillo](https://carrillo.app). Ver [`LICENSE`](./LICENSE).

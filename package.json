@@ -2,15 +2,39 @@
   "name": "bcv-exchange-rate",
   "version": "1.0.0",
   "description": "Librería profesional de Node.js para el rastreo de indicadores económicos oficiales de Venezuela (BCV) y Colombia (TRM - COP). Especializada en monedas fronterizas.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:cjs && npm run build:esm && npm run build:types && npm run build:esm:pkg",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build:esm:pkg": "node -e \"require('fs').writeFileSync('dist/esm/package.json', '{\\\"type\\\":\\\"module\\\"}')\"",
+    "clean": "rimraf dist coverage",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "lint": "eslint \"**/*.ts\"",
     "test": "jest --coverage",
-    "prepublishOnly": "npm run build"
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run clean && npm test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -25,8 +49,10 @@
     "ves",
     "frontera",
     "tasa de cambio",
+    "exchange-rate",
     "indicadores",
-    "economía"
+    "economía",
+    "scraping"
   ],
   "author": "José Carrillo <m@carrillo.app> (https://carrillo.app)",
   "license": "MIT",
@@ -35,17 +61,28 @@
   },
   "homepage": "https://github.com/carrilloapps/bcv-exchange-rate#readme",
   "dependencies": {
-    "@types/winston": "^2.4.4",
     "axios": "^1.15.0",
-    "cheerio": "^1.2.0",
-    "winston": "^3.19.0"
+    "cheerio": "^1.2.0"
+  },
+  "peerDependencies": {
+    "winston": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "winston": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.35",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "axios-mock-adapter": "^2.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
     "jest": "^30.3.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.0",
     "ts-jest": "^29.4.9",
     "typescript": "^6.0.3"
   }

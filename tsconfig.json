@@ -1,16 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "ES2022",
     "module": "commonjs",
-    "declaration": true,
-    "outDir": "./dist",
-    "rootDir": "./",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "declaration": false,
     "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["jest", "node"],
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["jest", "node"]
   },
-  "include": ["index.ts"],
-  "exclude": ["node_modules"]
+  "include": ["index.ts", "index.spec.ts"],
+  "exclude": ["node_modules", "dist"]
 }
