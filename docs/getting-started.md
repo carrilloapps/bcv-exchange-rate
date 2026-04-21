@@ -4,7 +4,7 @@ Esta guía te lleva del `npm install` a tu primera consulta útil en menos de ci
 
 ## Requisitos
 
-- Node.js **18 LTS** o superior.
+- Node.js **20 LTS** o superior.
 - Acceso de red saliente a `bcv.org.ve` y `datos.gov.co`.
 
 ## Instalación

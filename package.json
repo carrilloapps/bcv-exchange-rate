@@ -20,7 +20,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm && npm run build:types && npm run build:esm:pkg",

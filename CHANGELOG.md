@@ -29,7 +29,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 - **Publicación dual CJS y ESM** mediante el campo `exports`, con declaraciones `.d.ts` compartidas.
 - **Soporte para TypeScript** con declaraciones `.d.ts` distribuidas.
 - **Suite de pruebas con Jest y `ts-jest`**. Umbrales de cobertura al 100 % en statements, branches, functions y lines, forzados en CI.
-- **CI multi-SO y multi-Node** (GitHub Actions) con lint, verificación de formato, pruebas y build en Linux, macOS y Windows con Node 18, 20 y 22.
+- **CI multi-SO y multi-Node** (GitHub Actions) con lint, verificación de formato, pruebas y build en Linux, macOS y Windows con Node 20 y 22.
 - **Dependabot** semanal para dependencias y mensual para Actions.
 - **Plantillas de incidencias y PR**, `SECURITY.md` y `CODE_OF_CONDUCT.md`.
 - **ESLint, Prettier y EditorConfig** configurados.

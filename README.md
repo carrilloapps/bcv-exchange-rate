@@ -31,7 +31,7 @@ Librería profesional de Node.js para consultar indicadores económicos oficiale
 npm install bcv-exchange-rate
 ```
 
-Requiere **Node.js 18 LTS o superior**. Si usas winston como logger (opcional):
+Requiere **Node.js 20 LTS o superior**. Si usas winston como logger (opcional):
 
 ```bash
 npm install winston
