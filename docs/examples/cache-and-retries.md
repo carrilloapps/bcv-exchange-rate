@@ -8,7 +8,7 @@ import { getBcvRates, BcvResponse } from 'bcv-exchange-rate';
 const config = {
   retries: 3,
   retryDelayMs: 500,
-  cacheTtlMs: 60_000,           // 1 minuto de fresh (default)
+  cacheTtlMs: 60_000, // 1 minuto de fresh (default)
   cacheStaleTtlMs: 30 * 60_000, // 30 minutos de stale-while-error
   timeout: 15_000,
 } as const;

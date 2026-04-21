@@ -48,9 +48,9 @@ Las monedas soportadas están tipadas:
 ```typescript
 type Currency = 'USD' | 'EUR' | 'CNY' | 'TRY' | 'RUB';
 
-await getBcvRates({ currencies: 'USD' });           // correcto
-await getBcvRates({ currencies: ['USD', 'EUR'] });   // correcto
-await getBcvRates({ currencies: 'BRL' });            // error de tipo en compilación
+await getBcvRates({ currencies: 'USD' }); // correcto
+await getBcvRates({ currencies: ['USD', 'EUR'] }); // correcto
+await getBcvRates({ currencies: 'BRL' }); // error de tipo en compilación
 ```
 
 ### _Narrowing_ en `current`
@@ -114,10 +114,18 @@ try {
 import type { Logger } from 'bcv-exchange-rate';
 
 class MyAppLogger implements Logger {
-  info(msg: string, meta?: Record<string, unknown>): void { /* ... */ }
-  debug(msg: string, meta?: Record<string, unknown>): void { /* ... */ }
-  warn(msg: string, meta?: Record<string, unknown>): void { /* ... */ }
-  error(msg: string, meta?: Record<string, unknown>): void { /* ... */ }
+  info(msg: string, meta?: Record<string, unknown>): void {
+    /* ... */
+  }
+  debug(msg: string, meta?: Record<string, unknown>): void {
+    /* ... */
+  }
+  warn(msg: string, meta?: Record<string, unknown>): void {
+    /* ... */
+  }
+  error(msg: string, meta?: Record<string, unknown>): void {
+    /* ... */
+  }
 }
 ```
 

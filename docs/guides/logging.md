@@ -4,12 +4,12 @@
 
 ## Niveles emitidos
 
-| Nivel   | Cuándo                                                            |
-| ------- | ----------------------------------------------------------------- |
-| `info`  | Inicio y fin exitoso de extracciones, métricas de alto nivel.     |
-| `debug` | URL y número de intento de cada petición HTTP.                    |
-| `warn`  | Parseo parcial, reintentos, tabla no encontrada, SSL relajado.    |
-| `error` | Fallo no recuperable de una sección o endpoint.                   |
+| Nivel   | Cuándo                                                         |
+| ------- | -------------------------------------------------------------- |
+| `info`  | Inicio y fin exitoso de extracciones, métricas de alto nivel.  |
+| `debug` | URL y número de intento de cada petición HTTP.                 |
+| `warn`  | Parseo parcial, reintentos, tabla no encontrada, SSL relajado. |
+| `error` | Fallo no recuperable de una sección o endpoint.                |
 
 ## Logger silencioso por defecto
 
@@ -35,10 +35,7 @@ import { getBcvRates } from 'bcv-exchange-rate';
 
 const logger = winston.createLogger({
   level: 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
   transports: [new winston.transports.Console()],
 });
 

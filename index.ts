@@ -298,7 +298,7 @@ function formatBcvDate(date: Date): string {
 }
 
 function toIsoDate(input: string): string {
-    const match = /^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/.exec(input.trim());
+    const match = /^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/.exec(input.trim());
     if (!match) return input.trim();
     const [, d, m, y] = match;
     const year = y.length === 2 ? `20${y}` : y;

@@ -110,7 +110,9 @@ describe('bcv-exchange-rate', () => {
 
         it('throws NetworkError when current fails and history is skipped', async () => {
             mock.onGet('https://www.bcv.org.ve/').reply(500);
-            await expect(getBcvRates({ includeHistory: false, retries: 0 })).rejects.toBeInstanceOf(NetworkError);
+            await expect(getBcvRates({ includeHistory: false, retries: 0 })).rejects.toBeInstanceOf(
+                NetworkError
+            );
         });
 
         it('marks history as failed without throwing when getBcvRates wraps it', async () => {
@@ -130,7 +132,10 @@ describe('bcv-exchange-rate', () => {
                 logger: { info: jest.fn(), debug: jest.fn(), warn, error: jest.fn() },
             });
             expect(result.current.USD).toBeUndefined();
-            expect(warn).toHaveBeenCalledWith('Unparseable rate text', expect.objectContaining({ currency: 'USD' }));
+            expect(warn).toHaveBeenCalledWith(
+                'Unparseable rate text',
+                expect.objectContaining({ currency: 'USD' })
+            );
         });
 
         it('ignores empty rate text without emitting a warning', async () => {
@@ -165,7 +170,9 @@ describe('bcv-exchange-rate', () => {
                 strictSSL: false,
                 logger: { info: jest.fn(), debug: jest.fn(), warn, error: jest.fn() },
             });
-            expect(warn).toHaveBeenCalledWith(expect.stringContaining('TLS certificate validation is disabled'));
+            expect(warn).toHaveBeenCalledWith(
+                expect.stringContaining('TLS certificate validation is disabled')
+            );
         });
 
         it('validates days and page', async () => {
@@ -190,7 +197,10 @@ describe('bcv-exchange-rate', () => {
                 includeHistory: false,
                 logger: { info: jest.fn(), debug: jest.fn(), warn, error: jest.fn() },
             });
-            expect(warn).toHaveBeenCalledWith('Unparseable rate text', expect.objectContaining({ currency: 'USD' }));
+            expect(warn).toHaveBeenCalledWith(
+                'Unparseable rate text',
+                expect.objectContaining({ currency: 'USD' })
+            );
         });
 
         it('accepts invocation without arguments', async () => {
@@ -262,7 +272,10 @@ describe('bcv-exchange-rate', () => {
         });
 
         it('accepts invocation without arguments', async () => {
-            mock.onGet(/tasas-informativas-sistema-bancario/).reply(200, '<table class="views-table"></table>');
+            mock.onGet(/tasas-informativas-sistema-bancario/).reply(
+                200,
+                '<table class="views-table"></table>'
+            );
             const result = await getBcvHistory();
             expect(result.history).toEqual([]);
         });
@@ -417,7 +430,11 @@ describe('bcv-exchange-rate', () => {
             // Adding page 2 should evict page 1, not page 0
             await getBcvHistory({ page: 2, cacheStore: store });
 
-            expect(store.get(`bcv:history:https://www.bcv.org.ve/tasas-informativas-sistema-bancario?field_fecha_del_indicador_value%5Bmin%5D%5Bdate%5D=${encodeURIComponent('x')}`)).toBeUndefined();
+            expect(
+                store.get(
+                    `bcv:history:https://www.bcv.org.ve/tasas-informativas-sistema-bancario?field_fecha_del_indicador_value%5Bmin%5D%5Bdate%5D=${encodeURIComponent('x')}`
+                )
+            ).toBeUndefined();
             expect(store.size).toBe(2);
         });
 

@@ -24,11 +24,11 @@ await getBcvRates({ cacheTtlMs: 60_000, cacheStaleTtlMs: 10 * 60_000 });
 
 Toda URL consultada se cachea por **60 000 ms (1 minuto)** por defecto, en un LRU en memoria compartido por el proceso.
 
-| Opción            | Default    | Efecto                                                    |
-| ----------------- | ---------- | --------------------------------------------------------- |
-| `cacheTtlMs`      | `60000`    | TTL _fresh_. `0` desactiva completamente la caché.        |
+| Opción            | Default    | Efecto                                                       |
+| ----------------- | ---------- | ------------------------------------------------------------ |
+| `cacheTtlMs`      | `60000`    | TTL _fresh_. `0` desactiva completamente la caché.           |
 | `cacheStaleTtlMs` | `0`        | Ventana extra en la que se sirve stale si el upstream falla. |
-| `cacheStore`      | LRU global | Backend custom (ver más abajo).                           |
+| `cacheStore`      | LRU global | Backend custom (ver más abajo).                              |
 
 La caché **nunca cachea errores**. Si el request falla, sólo se intenta servir un valor vencido si existe una entrada previa dentro de `cacheStaleTtlMs`.
 
@@ -124,12 +124,12 @@ const stats = getCacheStats();
 // { hits: 142, misses: 37, staleServes: 3, size: 18 }
 ```
 
-| Campo         | Significado                                                                 |
-| ------------- | --------------------------------------------------------------------------- |
-| `hits`        | Número total de llamadas servidas desde la caché fresca.                    |
-| `misses`      | Llamadas que tuvieron que ir al upstream.                                   |
-| `staleServes` | Llamadas degradadas que sirvieron caché stale ante un fallo del upstream.   |
-| `size`        | Entradas actuales en la caché por defecto (no refleja los stores custom).   |
+| Campo         | Significado                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| `hits`        | Número total de llamadas servidas desde la caché fresca.                  |
+| `misses`      | Llamadas que tuvieron que ir al upstream.                                 |
+| `staleServes` | Llamadas degradadas que sirvieron caché stale ante un fallo del upstream. |
+| `size`        | Entradas actuales en la caché por defecto (no refleja los stores custom). |
 
 Úsalo para emitir métricas a Prometheus o Datadog:
 
@@ -156,8 +156,8 @@ interface CacheStore {
 
 interface CacheEntry<T = unknown> {
   value: T;
-  expiresAt: number;   // epoch ms — deadline de fresh
-  staleUntil: number;  // epoch ms — deadline de stale
+  expiresAt: number; // epoch ms — deadline de fresh
+  staleUntil: number; // epoch ms — deadline de stale
 }
 ```
 
@@ -184,11 +184,7 @@ function redisBackedStore(localMaxEntries = 200): CacheStore {
     set: (key, entry) => {
       local.set(key, entry);
       // Fire-and-forget a Redis para persistencia compartida.
-      redis.setEx(
-        `bcv:${key}`,
-        Math.ceil((entry.staleUntil - Date.now()) / 1000),
-        JSON.stringify(entry)
-      );
+      redis.setEx(`bcv:${key}`, Math.ceil((entry.staleUntil - Date.now()) / 1000), JSON.stringify(entry));
     },
     delete: (key) => {
       local.delete(key);
@@ -222,11 +218,11 @@ async function warmFromRedis(store: CacheStore): Promise<void> {
 
 Las claves son **determinísticas** y se basan en la URL:
 
-| Función         | Clave                                                           |
-| --------------- | --------------------------------------------------------------- |
-| `getBcvRates`   | `bcv:current` (sólo la portada)                                 |
-| `getBcvHistory` | `bcv:history:<url completa incluyendo page y days>`             |
-| `getTrmRates`   | `trm:<url completa incluyendo limit y offset>`                  |
+| Función         | Clave                                               |
+| --------------- | --------------------------------------------------- |
+| `getBcvRates`   | `bcv:current` (sólo la portada)                     |
+| `getBcvHistory` | `bcv:history:<url completa incluyendo page y days>` |
+| `getTrmRates`   | `trm:<url completa incluyendo limit y offset>`      |
 
 Múltiples consumidores con distintos `cacheTtlMs` comparten la entrada: el primero que la puebla define el TTL efectivo hasta que expire.
 
@@ -245,14 +241,14 @@ import {
 } from 'bcv-exchange-rate';
 ```
 
-| Función                   | Qué hace                                                              |
-| ------------------------- | --------------------------------------------------------------------- |
-| `clearCache()`            | Vacía la caché por defecto. No toca los stores inyectados por llamada. |
+| Función                   | Qué hace                                                                 |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `clearCache()`            | Vacía la caché por defecto. No toca los stores inyectados por llamada.   |
 | `createInMemoryCache(o?)` | Crea un LRU en memoria nuevo. Útil para inyectarlo en llamadas aisladas. |
-| `setDefaultCache(store)`  | Reemplaza la caché global por defecto. Ideal para backends con Redis.  |
-| `getDefaultCache()`       | Devuelve la instancia actual del default. Útil en pruebas.             |
-| `getCacheStats()`         | Snapshot de contadores más el tamaño del default.                      |
-| `resetCacheStats()`       | Pone `hits`, `misses` y `staleServes` en cero. No toca las entradas.   |
+| `setDefaultCache(store)`  | Reemplaza la caché global por defecto. Ideal para backends con Redis.    |
+| `getDefaultCache()`       | Devuelve la instancia actual del default. Útil en pruebas.               |
+| `getCacheStats()`         | Snapshot de contadores más el tamaño del default.                        |
+| `resetCacheStats()`       | Pone `hits`, `misses` y `staleServes` en cero. No toca las entradas.     |
 
 ## Casos de uso y configuraciones sugeridas
 
@@ -278,7 +274,9 @@ import {
 ### Pruebas de integración
 
 ```typescript
-{ cacheTtlMs: 0 }
+{
+  cacheTtlMs: 0;
+}
 // Evita resultados inestables por caché cruzada entre pruebas.
 ```
 

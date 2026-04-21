@@ -15,8 +15,8 @@ await getBcvRates();
 
 ```typescript
 await getBcvRates({
-  retries: 5,          // intentos adicionales tras el inicial
-  retryDelayMs: 1000,  // base del backoff
+  retries: 5, // intentos adicionales tras el inicial
+  retryDelayMs: 1000, // base del backoff
 });
 // Esperas: 1000, 2000, 4000, 8000 y 16000 ms.
 ```

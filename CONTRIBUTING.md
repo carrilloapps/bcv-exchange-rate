@@ -60,12 +60,12 @@ Abre una incidencia con la plantilla **Feature request** antes de escribir códi
 
 ## Requisitos de pruebas
 
-| Métrica      | Mínimo |
-| ------------ | ------ |
-| Branches     | 100 %  |
-| Functions    | 100 %  |
-| Lines        | 100 %  |
-| Statements   | 100 %  |
+| Métrica    | Mínimo |
+| ---------- | ------ |
+| Branches   | 100 %  |
+| Functions  | 100 %  |
+| Lines      | 100 %  |
+| Statements | 100 %  |
 
 Ejecutar una prueba concreta:
 

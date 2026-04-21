@@ -34,7 +34,7 @@ Documentación exhaustiva de los símbolos exportados por `bcv-exchange-rate`.
 ### `getBcvRates`
 
 ```typescript
-function getBcvRates(params?: BcvParams): Promise<BcvResponse>
+function getBcvRates(params?: BcvParams): Promise<BcvResponse>;
 ```
 
 Obtiene las tasas oficiales actuales del Banco Central de Venezuela y, opcionalmente, el historial de tasas informativas del sistema bancario.
@@ -72,7 +72,7 @@ if (result.status.current === 'failed') {
 ### `getBcvHistory`
 
 ```typescript
-function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination'>>
+function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination'>>;
 ```
 
 Obtiene únicamente el histórico bancario. Útil para reportes o auditorías que no necesitan la portada.
@@ -93,7 +93,7 @@ const { history, pagination } = await getBcvHistory({ days: 30, page: 2 });
 ### `getTrmRates`
 
 ```typescript
-function getTrmRates(params?: TrmParams): Promise<TrmResponse | null>
+function getTrmRates(params?: TrmParams): Promise<TrmResponse | null>;
 ```
 
 Consulta la Tasa Representativa del Mercado de Colombia publicada por la Superintendencia Financiera en `datos.gov.co`.
@@ -129,14 +129,14 @@ function getCacheStats(): CacheStats;
 function resetCacheStats(): void;
 ```
 
-| Función                   | Descripción                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `clearCache()`            | Vacía la caché por defecto. No toca los stores inyectados por llamada.       |
-| `createInMemoryCache(o?)` | Factoría LRU en memoria con `maxEntries` (valor por defecto `200`, mínimo 1). |
+| Función                   | Descripción                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `clearCache()`            | Vacía la caché por defecto. No toca los stores inyectados por llamada.              |
+| `createInMemoryCache(o?)` | Factoría LRU en memoria con `maxEntries` (valor por defecto `200`, mínimo 1).       |
 | `setDefaultCache(store)`  | Reemplaza la caché global por defecto. Útil para instalar un backend personalizado. |
-| `getDefaultCache()`       | Devuelve la instancia actual de la caché por defecto.                        |
-| `getCacheStats()`         | Snapshot inmutable: `{ hits, misses, staleServes, size }`.                   |
-| `resetCacheStats()`       | Reinicia los contadores globales. No borra entradas.                         |
+| `getDefaultCache()`       | Devuelve la instancia actual de la caché por defecto.                               |
+| `getCacheStats()`         | Snapshot inmutable: `{ hits, misses, staleServes, size }`.                          |
+| `resetCacheStats()`       | Reinicia los contadores globales. No borra entradas.                                |
 
 Guía completa: [Caché y resiliencia](./guides/caching.md).
 
@@ -148,38 +148,38 @@ Guía completa: [Caché y resiliencia](./guides/caching.md).
 
 Opciones compartidas por todas las funciones públicas.
 
-| Propiedad       | Tipo                 | Default       | Descripción                                                                 |
-| --------------- | -------------------- | ------------- | --------------------------------------------------------------------------- |
-| `timeout`         | `number`             | `25000`       | Tiempo máximo HTTP en milisegundos.                                            |
-| `strictSSL`       | `boolean`            | `true`        | Si es `false`, se desactiva la validación TLS y se emite un `warn`.            |
-| `userAgent`       | `string`             | UA de Chrome  | Cabecera `User-Agent`.                                                         |
-| `logger`          | [`Logger`](#logger)  | Silencioso    | Logger basado en interfaz. Con `BCV_DEBUG` definido, usa `console` si no se inyecta. |
-| `retries`         | `number`             | `2`           | Intentos adicionales ante fallo transitorio (total = `retries + 1`).           |
-| `retryDelayMs`    | `number`             | `400`         | Retardo base del backoff exponencial (`base * 2^attempt`).                     |
-| `cacheTtlMs`      | `number`             | `60000`       | TTL _fresh_. `0` desactiva la caché para esta llamada.                         |
-| `cacheStaleTtlMs` | `number`             | `0`           | Ventana extra (ms) para servir _stale_ si el upstream falla.                   |
-| `cacheStore`      | [`CacheStore`](#cachestore) | LRU global | Backend personalizado para esta llamada. Sin él, usa el global por defecto. |
+| Propiedad         | Tipo                        | Default      | Descripción                                                                          |
+| ----------------- | --------------------------- | ------------ | ------------------------------------------------------------------------------------ |
+| `timeout`         | `number`                    | `25000`      | Tiempo máximo HTTP en milisegundos.                                                  |
+| `strictSSL`       | `boolean`                   | `true`       | Si es `false`, se desactiva la validación TLS y se emite un `warn`.                  |
+| `userAgent`       | `string`                    | UA de Chrome | Cabecera `User-Agent`.                                                               |
+| `logger`          | [`Logger`](#logger)         | Silencioso   | Logger basado en interfaz. Con `BCV_DEBUG` definido, usa `console` si no se inyecta. |
+| `retries`         | `number`                    | `2`          | Intentos adicionales ante fallo transitorio (total = `retries + 1`).                 |
+| `retryDelayMs`    | `number`                    | `400`        | Retardo base del backoff exponencial (`base * 2^attempt`).                           |
+| `cacheTtlMs`      | `number`                    | `60000`      | TTL _fresh_. `0` desactiva la caché para esta llamada.                               |
+| `cacheStaleTtlMs` | `number`                    | `0`          | Ventana extra (ms) para servir _stale_ si el upstream falla.                         |
+| `cacheStore`      | [`CacheStore`](#cachestore) | LRU global   | Backend personalizado para esta llamada. Sin él, usa el global por defecto.          |
 
 ### `BcvParams`
 
 Extiende [`RequestOptions`](#requestoptions).
 
-| Propiedad         | Tipo                              | Default | Descripción                                                      |
-| ----------------- | --------------------------------- | ------- | ---------------------------------------------------------------- |
-| `currencies`      | `Currency \| Currency[]`          | Todas   | Filtra el bloque `current`.                                      |
-| `includeCurrent`  | `boolean`                         | `true`  | Consulta la portada.                                             |
-| `includeHistory`  | `boolean`                         | `true`  | Consulta el histórico bancario.                                  |
-| `days`            | `number`                          | `7`     | Rango en días (≥ 1) hacia atrás desde hoy.                       |
-| `page`            | `number`                          | `0`     | Número de página (≥ 0) del histórico.                            |
+| Propiedad        | Tipo                     | Default | Descripción                                |
+| ---------------- | ------------------------ | ------- | ------------------------------------------ |
+| `currencies`     | `Currency \| Currency[]` | Todas   | Filtra el bloque `current`.                |
+| `includeCurrent` | `boolean`                | `true`  | Consulta la portada.                       |
+| `includeHistory` | `boolean`                | `true`  | Consulta el histórico bancario.            |
+| `days`           | `number`                 | `7`     | Rango en días (≥ 1) hacia atrás desde hoy. |
+| `page`           | `number`                 | `0`     | Número de página (≥ 0) del histórico.      |
 
 ### `TrmParams`
 
 Extiende [`RequestOptions`](#requestoptions).
 
-| Propiedad | Tipo     | Default | Descripción                               |
-| --------- | -------- | ------- | ----------------------------------------- |
-| `limit`   | `number` | `10`    | Registros a devolver. Rango `[1, 1000]`.  |
-| `offset`  | `number` | `0`     | Desplazamiento para paginar.              |
+| Propiedad | Tipo     | Default | Descripción                              |
+| --------- | -------- | ------- | ---------------------------------------- |
+| `limit`   | `number` | `10`    | Registros a devolver. Rango `[1, 1000]`. |
+| `offset`  | `number` | `0`     | Desplazamiento para paginar.             |
 
 ---
 
@@ -213,9 +213,9 @@ interface BcvResponse {
 
 ```typescript
 interface BcvBankRate {
-  date: string;            // ISO 8601 (YYYY-MM-DD) cuando se reconoce el formato
+  date: string; // ISO 8601 (YYYY-MM-DD) cuando se reconoce el formato
   bank: string;
-  buy: number | null;      // null si no pudo parsearse
+  buy: number | null; // null si no pudo parsearse
   sell: number | null;
 }
 ```
@@ -250,8 +250,8 @@ interface TrmResponse {
 ```typescript
 interface CacheEntry<T = unknown> {
   value: T;
-  expiresAt: number;   // epoch ms: límite de fresh hit
-  staleUntil: number;  // epoch ms: límite para servir stale-on-error
+  expiresAt: number; // epoch ms: límite de fresh hit
+  staleUntil: number; // epoch ms: límite para servir stale-on-error
 }
 ```
 
@@ -273,10 +273,10 @@ Backend pluggable para la caché. La interfaz es **síncrona**; para backends as
 
 ```typescript
 interface CacheStats {
-  hits: number;         // total de llamadas servidas desde la caché fresh
-  misses: number;       // llamadas que tuvieron que ir al upstream
-  staleServes: number;  // llamadas degradadas sirviendo caché stale
-  size: number;         // entradas en la caché por defecto (no refleja stores custom)
+  hits: number; // total de llamadas servidas desde la caché fresh
+  misses: number; // llamadas que tuvieron que ir al upstream
+  staleServes: number; // llamadas degradadas sirviendo caché stale
+  size: number; // entradas en la caché por defecto (no refleja stores custom)
 }
 ```
 

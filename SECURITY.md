@@ -2,11 +2,11 @@
 
 ## Versiones soportadas
 
-| Versión | Soporte                                        |
-| ------- | ---------------------------------------------- |
-| 2.x     | Activo                                         |
-| 1.x     | Sólo parches críticos hasta el 2026-10-21      |
-| < 1.0   | Sin soporte                                    |
+| Versión | Soporte                                   |
+| ------- | ----------------------------------------- |
+| 2.x     | Activo                                    |
+| 1.x     | Sólo parches críticos hasta el 2026-10-21 |
+| < 1.0   | Sin soporte                               |
 
 ## Reporte de vulnerabilidades
 

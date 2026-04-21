@@ -113,8 +113,8 @@ try {
 **Causa 1:** `cacheTtlMs: 0` desactiva la caché para esa llamada.
 
 ```typescript
-await getBcvRates();                       // caché activa, default 60 segundos
-await getBcvRates({ cacheTtlMs: 0 });      // sin caché para esta llamada
+await getBcvRates(); // caché activa, default 60 segundos
+await getBcvRates({ cacheTtlMs: 0 }); // sin caché para esta llamada
 await getBcvRates({ cacheTtlMs: 5 * 60_000 }); // 5 minutos
 ```
 

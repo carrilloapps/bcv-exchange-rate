@@ -50,11 +50,11 @@ try {
 
 ## Mapa de qué lanza qué
 
-| Función          | `ValidationError` | `NetworkError`         | `TrmApiError` | `ParseError` | Retorna `null` |
-| ---------------- | ----------------- | ---------------------- | ------------- | ------------ | -------------- |
-| `getBcvRates`    | sí                | sí (si sólo una sección) | no          | no           | no             |
-| `getBcvHistory`  | sí                | sí                     | no            | no           | no             |
-| `getTrmRates`    | sí                | no                     | sí            | no           | sí (sin datos) |
+| Función         | `ValidationError` | `NetworkError`           | `TrmApiError` | `ParseError` | Retorna `null` |
+| --------------- | ----------------- | ------------------------ | ------------- | ------------ | -------------- |
+| `getBcvRates`   | sí                | sí (si sólo una sección) | no            | no           | no             |
+| `getBcvHistory` | sí                | sí                       | no            | no           | no             |
+| `getTrmRates`   | sí                | no                       | sí            | no           | sí (sin datos) |
 
 ## Contrato asimétrico de `getBcvRates`
 
