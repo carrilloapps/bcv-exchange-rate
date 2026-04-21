@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/node/v/bcv-exchange-rate.svg?logo=node.js&logoColor=white)](https://nodejs.org)
 
-Librería profesional de Node.js para consultar indicadores económicos oficiales de **Venezuela (BCV)** y **Colombia (TRM)**. Extrae datos directamente del Banco Central de Venezuela y del portal de datos abiertos del Gobierno de Colombia, con tipado estricto, retries con backoff, caché en memoria opcional, jerarquía de errores tipada y logger duck-typed sin dependencias forzadas.
+Librería profesional de Node.js para consultar indicadores económicos oficiales de **Venezuela (BCV)** y **Colombia (TRM)**. Extrae los datos directamente del Banco Central de Venezuela y del portal de datos abiertos del Gobierno de Colombia, con tipado estricto, reintentos con backoff, caché en memoria activa por defecto, jerarquía de errores tipada y logger basado en interfaz, sin dependencias forzadas.
 
 ---
 
@@ -19,7 +19,7 @@ Librería profesional de Node.js para consultar indicadores económicos oficiale
 - **Reintentos automáticos** con backoff exponencial configurable.
 - **Caché en memoria** con TTL por llamada y _stale-while-error_ opcional.
 - **Jerarquía de errores tipada** (`NetworkError`, `TrmApiError`, `ValidationError`).
-- **Logger basado en interfaz.** Compatible con winston, pino, bunyan o console, sin dependencias forzadas.
+- **Logger basado en interfaz.** Compatible con winston, pino, bunyan o `console`, sin dependencias forzadas.
 - **TLS seguro por defecto** (`strictSSL: true`), con desactivación explícita cuando sea necesario.
 - **Dual CJS/ESM** con declaraciones `.d.ts`.
 - **Estado por sección** (`status.current`, `status.history`) para detectar fallos parciales.
@@ -102,10 +102,10 @@ La documentación extendida vive en [`docs/`](./docs/README.md):
 
 ```bash
 npm install
-npm test             # Jest con 100 % de cobertura forzada
-npm run lint         # ESLint
-npm run format       # Prettier
-npm run build        # Dual CJS/ESM + declaraciones
+npm test             # Jest con cobertura del 100 % forzada.
+npm run lint         # ESLint.
+npm run format       # Prettier.
+npm run build        # Dual CJS/ESM más declaraciones.
 ```
 
 Más detalles en [`CONTRIBUTING.md`](./CONTRIBUTING.md).
@@ -116,4 +116,4 @@ Reporta vulnerabilidades según lo descrito en [`SECURITY.md`](./SECURITY.md). *
 
 ## Licencia
 
-MIT © [José Carrillo](https://carrillo.app). Ver [`LICENSE`](./LICENSE).
+MIT © [José Carrillo](https://carrillo.app). Consulta el archivo [`LICENSE`](./LICENSE).

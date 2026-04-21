@@ -35,14 +35,14 @@ flowchart TD
     Cache -->|hit / stale| C
 ```
 
-## Flujo de un llamado
+## Flujo de una llamada
 
-1. **Validación** (`assertPositiveInt`). Los inputs se validan antes de cualquier I/O. Los errores se elevan como `ValidationError`.
+1. **Validación** (`assertPositiveInt`). Las entradas se validan antes de cualquier I/O. Los errores se elevan como `ValidationError`.
 2. **Resolución del logger** (`resolveLogger`). La prioridad es: `options.logger` > `console` (si `BCV_DEBUG` está definido) > logger silencioso.
 3. **Configuración de Axios** (`buildAxiosConfig`). Aplica `timeout`, `User-Agent`, cabeceras y `httpsAgent` con `rejectUnauthorized` según `strictSSL`. Emite `warn` cuando TLS está relajado.
-4. **Caché** (`withCache`). Con `cacheTtlMs > 0`, el resultado se memoriza por clave de URL. La clave no incluye el TTL, así múltiples consumidores comparten la entrada.
+4. **Caché** (`withCache`). Con `cacheTtlMs > 0`, el resultado se memoriza por clave de URL. La clave no incluye el TTL, por lo que múltiples consumidores comparten la entrada.
 5. **Reintentos con backoff exponencial** (`requestWithRetry`). Se espera `base * 2^attempt` ms entre intentos. Todos los fallos finales se envuelven en `NetworkError`.
-6. **Parseo** (cheerio para BCV, `JSON.parse` para TRM). Los valores numéricos pasan por `parseVenezuelanNumber`, que tolera el formato `1.234,56`.
+6. **Parseo** (cheerio para BCV; `JSON.parse` para TRM). Los valores numéricos pasan por `parseVenezuelanNumber`, que tolera el formato `1.234,56`.
 
 ## Ciclo de vida de una entrada en caché
 
@@ -72,7 +72,7 @@ Esto permite que los consumidores que priorizan disponibilidad (por ejemplo, das
 ### Fechas
 
 - `effectiveDate` se extrae del atributo `content` de `.date-display-single` (ISO) o del texto visible como alternativa.
-- `history[].date` se normaliza a ISO 8601 (`YYYY-MM-DD`) cuando el formato de entrada coincide con `DD-MM-YYYY` o `DD-MM-YY`. Si no, se retorna tal cual.
+- `history[].date` se normaliza a ISO 8601 (`YYYY-MM-DD`) cuando el formato de entrada coincide con `DD-MM-YYYY` o `DD-MM-YY`. Si no, se devuelve tal cual.
 
 ### Caché
 
@@ -91,7 +91,7 @@ Esto permite que los consumidores que priorizan disponibilidad (por ejemplo, das
 
 ### ¿Por qué un monolito en un archivo?
 
-La librería es pequeña (~450 LOC) y el scraping del BCV cambia en bloque. Dividirla en módulos internos añadiría indirección sin beneficio real para un consumidor que solo llama tres funciones. El tamaño justifica el archivo único.
+La librería es pequeña (~450 LOC) y el scraping del BCV cambia en bloque. Dividirla en módulos internos añadiría indirección sin beneficio real para un consumidor que sólo llama a tres funciones. El tamaño justifica el archivo único.
 
 ### ¿Por qué `winston` como peer opcional?
 
@@ -99,11 +99,11 @@ Forzar `winston` como dependencia directa añadiría ~450 KB al árbol de cualqu
 
 ### ¿Por qué `strictSSL: true` por defecto?
 
-Para evitar un hueco de seguridad: un valor por defecto permisivo permitiría que un usuario instalara la librería y, sin saberlo, abriera su aplicación a un MITM. Por eso la desactivación es explícita y cada llamada con `strictSSL: false` emite un `warn`, de modo que la decisión sea consciente. Consulta la [guía de seguridad](./guides/security.md).
+Para evitar un hueco de seguridad: un valor por defecto permisivo permitiría que un usuario instalara la librería y, sin saberlo, expusiera su aplicación a un MITM. Por eso la desactivación es explícita y cada llamada con `strictSSL: false` emite un `warn`, de modo que la decisión sea consciente. Consulta la [guía de seguridad](./guides/security.md).
 
-### ¿Por qué `getTrmRates` retorna `null`?
+### ¿Por qué `getTrmRates` devuelve `null`?
 
-Para distinguir «sin datos» de «error» en el consumidor. Si la API responde HTTP 200 con `[]`, esa es una situación normal (por ejemplo, sin registros el primer día del año), no un error de red. Lanzar en ese caso obligaría al consumidor a capturar excepciones esperadas.
+Para distinguir «sin datos» de «error» en el consumidor. Si la API responde con HTTP 200 y `[]`, esa es una situación normal (por ejemplo, no hay registros el primer día del año), no un error de red. Lanzar en ese caso obligaría al consumidor a capturar excepciones esperadas.
 
 ## Archivos del proyecto
 
@@ -112,16 +112,17 @@ Para distinguir «sin datos» de «error» en el consumidor. Si la API responde 
 ├── index.ts                   # Código fuente único
 ├── index.spec.ts              # Suite de pruebas
 ├── package.json
-├── tsconfig.json              # Config base (usada por el IDE y los tests)
+├── tsconfig.json              # Configuración base (usada por el IDE y los tests)
 ├── tsconfig.cjs.json          # Build CommonJS → dist/cjs
 ├── tsconfig.esm.json          # Build ESM → dist/esm
 ├── tsconfig.types.json        # Emisión de declaraciones → dist/types
 ├── jest.config.js             # Umbral de cobertura del 100 %
-├── .eslintrc.json
-├── .prettierrc.json
-├── .editorconfig
+├── eslint.config.mjs          # Flat config de ESLint
+├── .prettierrc.json           # Configuración de Prettier
+├── .editorconfig              # Reglas de editor
+├── .gitattributes             # Normalización de saltos de línea
 ├── docs/                      # Esta documentación
-└── .github/                   # CI, plantillas y dependabot
+└── .github/                   # CI, plantillas y Dependabot
 ```
 
 ## Pruebas

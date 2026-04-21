@@ -4,14 +4,14 @@ Esta librería consume fuentes públicas oficiales. La principal superficie de r
 
 ## `strictSSL`: por qué `true` por defecto
 
-El portal `bcv.org.ve` sirve con frecuencia certificados expirados o con cadena incompleta. Pese a ello, el valor por defecto es `true`: un default permisivo dejaría que cualquier consumidor instalara la librería y, sin saberlo, quedara expuesto a un MITM silencioso.
+El portal `bcv.org.ve` sirve con frecuencia certificados expirados o con cadena incompleta. Pese a ello, el valor por defecto es `true`: un valor permisivo dejaría que cualquier consumidor instalara la librería y, sin saberlo, quedara expuesto a un ataque MITM silencioso.
 
 Si necesitas relajar la validación, hazlo de forma explícita. Cada llamada con `strictSSL: false` emite un `warn` para que la decisión sea consciente.
 
 ### Qué hacer si te encuentras con `NetworkError: ... certificate`
 
 1. **Decisión consciente.** Desactiva con `strictSSL: false`. Sabrás que está ocurriendo porque la librería emite un `warn` en cada llamada.
-2. **Opción preferida.** Utiliza un agente corporativo o un proxy que intercepte con una CA propia, y carga tu CA bundle en Node mediante `NODE_EXTRA_CA_CERTS`.
+2. **Opción preferida.** Utiliza un agente corporativo o un proxy que intercepte con una CA propia, y carga el bundle de la CA en Node mediante `NODE_EXTRA_CA_CERTS`.
 
 ```typescript
 await getBcvRates({ strictSSL: false });
@@ -23,8 +23,8 @@ await getBcvRates({ strictSSL: false });
 Si desactivas `strictSSL` porque «falla en staging», primero verifica:
 
 - ¿Tu red tiene un proxy corporativo? Añade la CA del proxy.
-- ¿El reloj del contenedor está correcto? Los certificados pueden reportarse como expirados cuando la fecha está mal.
-- ¿Estás detrás de un _captive portal_? No es el BCV, es tu red.
+- ¿El reloj del contenedor es correcto? Los certificados pueden reportarse como expirados cuando la fecha está mal.
+- ¿Estás detrás de un _captive portal_? Entonces no es el BCV, es tu red.
 
 Desactivar TLS «hasta que funcione» acostumbra al equipo a ignorar alertas legítimas.
 
@@ -32,14 +32,14 @@ Desactivar TLS «hasta que funcione» acostumbra al equipo a ignorar alertas leg
 
 ### Dentro del alcance
 
-- **MITM en TLS** si `strictSSL: false`. Mitigación: default `true` más `warn` al desactivar.
-- **Credenciales en URL o logs.** La librería no acepta credenciales (los portales son públicos). No hay secretos que filtrar.
-- **Cabeceras personalizadas.** `userAgent` es configurable; no se sanitizan las cabeceras inyectadas por el usuario.
+- **MITM en TLS** si `strictSSL: false`. Mitigación: valor por defecto `true` y un `warn` en cada desactivación.
+- **Credenciales en URL o logs.** La librería no acepta credenciales: los portales son públicos, así que no hay secretos que filtrar.
+- **Cabeceras personalizadas.** `userAgent` es configurable; no se sanean las cabeceras inyectadas por el usuario.
 
 ### Fuera del alcance
 
-- **Compromiso del portal oficial.** Si `bcv.org.ve` sirve HTML malicioso, sólo se parsea como texto (no se ejecuta). Los valores numéricos pasan por `parseVenezuelanNumber`.
-- **Denegación de servicio contra el BCV.** La librería no garantiza que los consumidores respeten los límites de tasa. Usa la caché y mantén los reintentos moderados.
+- **Compromiso del portal oficial.** Si `bcv.org.ve` sirve HTML malicioso, sólo se parsea como texto: no se ejecuta. Los valores numéricos pasan por `parseVenezuelanNumber`.
+- **Denegación de servicio contra el BCV.** La librería no garantiza que los consumidores respeten los límites de tasa del portal. Usa la caché y mantén los reintentos moderados.
 
 ## Recomendaciones operativas
 
@@ -51,4 +51,4 @@ Desactivar TLS «hasta que funcione» acostumbra al equipo a ignorar alertas leg
 
 ## Reporte de vulnerabilidades
 
-Consulta [`SECURITY.md`](../../SECURITY.md) en la raíz del repositorio. **No abras incidencias públicas para vulnerabilidades.**
+Consulta [`SECURITY.md`](../../SECURITY.md) en la raíz del repositorio. **No abras incidencias públicas** para vulnerabilidades.

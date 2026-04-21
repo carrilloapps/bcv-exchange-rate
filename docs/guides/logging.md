@@ -1,6 +1,6 @@
 # Guía: logging y observabilidad
 
-`bcv-exchange-rate` no impone un logger concreto. Acepta cualquier objeto con la interfaz `Logger` (`info`, `debug`, `warn`, `error`). Esta guía muestra cómo integrarlo con los loggers más comunes.
+`bcv-exchange-rate` no impone un logger concreto: acepta cualquier objeto con la interfaz `Logger` (`info`, `debug`, `warn` y `error`). Esta guía muestra cómo integrarlo con los loggers más comunes.
 
 ## Niveles emitidos
 
@@ -23,7 +23,7 @@ Esto sólo aplica cuando **no** has inyectado un `logger` propio.
 
 ## Integración con `winston`
 
-`winston` está declarada como `peerDependency` opcional. Instálalo en tu proyecto:
+`winston` está declarado como `peerDependency` opcional. Instálalo en tu proyecto:
 
 ```bash
 npm install winston
@@ -44,7 +44,7 @@ await getBcvRates({ logger });
 
 ## Integración con `pino`
 
-`pino` expone la misma forma (`info/debug/warn/error`), así que funciona directamente:
+`pino` expone la misma forma (`info`, `debug`, `warn` y `error`), por lo que funciona directamente:
 
 ```typescript
 import pino from 'pino';
@@ -102,9 +102,9 @@ const quietLogger: Logger = {
 await getBcvRates({ logger: quietLogger });
 ```
 
-## Integración con stacks de observabilidad
+## Integración con plataformas de observabilidad
 
-### Datadog / New Relic / Sentry
+### Datadog, New Relic o Sentry
 
 Usa el logger de tu APM como `logger`:
 

@@ -1,6 +1,6 @@
 # Guía: reintentos y resiliencia
 
-Los portales oficiales del BCV y de `datos.gov.co` no son infraestructuras con SLA garantizado. Los errores transitorios son comunes. Esta guía documenta el sistema de reintentos integrado.
+Los portales oficiales del BCV y de `datos.gov.co` no son infraestructuras con SLA garantizado, por lo que los errores transitorios son frecuentes. Esta guía documenta el sistema de reintentos integrado.
 
 ## Comportamiento por defecto
 
@@ -25,14 +25,14 @@ await getBcvRates({
 
 **Se reintenta:**
 
-- Fallos de red (DNS, TCP, TLS).
+- Fallos de red (DNS, TCP o TLS).
 - Respuestas HTTP 5xx (gracias a `validateStatus < 500`).
 - Expiraciones de tiempo (_timeouts_).
 
 **No se reintenta:**
 
-- Respuestas 4xx (pasan el parseo directamente).
-- Errores de parseo de HTML (no son transitorios).
+- Respuestas 4xx: pasan al parseo directamente.
+- Errores de parseo de HTML: no son transitorios.
 - Errores de validación de entrada.
 
 ## Patrones
@@ -57,7 +57,7 @@ await getBcvHistory({ retries: 6, retryDelayMs: 2000 });
 
 ### Sin reintentos
 
-Si quieres implementar tu propia política (_circuit breaker_, _bulkhead_):
+Si quieres implementar tu propia política (_circuit breaker_, _bulkhead_, etc.):
 
 ```typescript
 await getBcvHistory({ retries: 0 });
@@ -76,7 +76,7 @@ await getBcvRates({
 });
 ```
 
-Si la primera llamada exitosa puebla la caché, los siguientes 60 segundos no pagan el coste de los reintentos. Cuando la caché expira, la siguiente invocación vuelve a aplicar los reintentos si hace falta, y el stale cubre hasta 15 minutos adicionales si el upstream cae por completo.
+Si la primera llamada exitosa puebla la caché, los siguientes 60 segundos no pagan el coste de los reintentos. Cuando la caché expira, la siguiente invocación vuelve a aplicar los reintentos si hace falta, y el modo _stale_ cubre hasta 15 minutos adicionales si el upstream cae por completo.
 
 ## Interacción con el _timeout_
 
@@ -102,7 +102,7 @@ Cada reintento emite un `warn` con `url`, `attempt` y `delay`:
 }
 ```
 
-Alertar cuando el ritmo de _warns_ supera un umbral ayuda a detectar la degradación del BCV antes de que escale a fallo.
+Alertar cuando el ritmo de advertencias supere un umbral ayuda a detectar la degradación del BCV antes de que escale a un fallo total.
 
 ## Política externa (_circuit breaker_)
 

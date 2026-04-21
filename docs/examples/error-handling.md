@@ -1,6 +1,6 @@
 # Ejemplo: manejo de errores robusto
 
-Patrón completo para un caso de uso crítico (pagos, contabilidad).
+Patrón completo para un caso de uso crítico (por ejemplo, pagos o contabilidad).
 
 ```typescript
 import {

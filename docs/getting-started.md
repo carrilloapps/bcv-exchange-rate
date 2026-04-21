@@ -1,6 +1,6 @@
 # Guía de inicio
 
-Esta guía te lleva del `npm install` a tu primera consulta útil en menos de cinco minutos.
+Esta guía te lleva desde `npm install` hasta tu primera consulta útil en menos de cinco minutos.
 
 ## Requisitos
 
@@ -21,7 +21,7 @@ yarn add bcv-exchange-rate
 pnpm add bcv-exchange-rate
 ```
 
-## Primer llamado
+## Primera llamada
 
 ### CommonJS
 
@@ -46,7 +46,7 @@ const bcv = await getBcvRates({ currencies: 'USD' });
 console.log('USD/VES:', bcv.current.USD);
 ```
 
-## Qué esperar en la respuesta
+## Estructura de la respuesta
 
 ### BCV
 
@@ -74,7 +74,7 @@ El campo `status` es la forma recomendada de detectar fallos parciales: si solic
 }
 ```
 
-`getTrmRates` devuelve `null` cuando la API responde con cero registros.
+`getTrmRates` devuelve `null` cuando la API responde sin registros.
 
 ## Próximos pasos
 

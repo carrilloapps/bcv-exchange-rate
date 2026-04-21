@@ -1,13 +1,13 @@
 # Guía: caché y resiliencia
 
-La librería incluye una caché en memoria con TTL, _stale-while-error_ opcional, evicción LRU y un backend pluggable para quienes necesiten Redis u otras implementaciones. Esta guía explica cuándo y cómo usar cada pieza.
+La librería incluye una caché en memoria con TTL, modo _stale-while-error_ opcional, evicción LRU y un backend pluggable para quienes necesiten Redis u otras implementaciones. Esta guía explica cuándo y cómo usar cada pieza.
 
-## TL;DR
+## Resumen rápido
 
 ```typescript
 import { getBcvRates } from 'bcv-exchange-rate';
 
-// Default: caché activa por 60 segundos para toda URL scrapeada.
+// Valor por defecto: caché activa durante 60 segundos para toda URL scrapeada.
 const bcv = await getBcvRates();
 
 // Aumentar el TTL a 5 minutos.
@@ -20,17 +20,17 @@ await getBcvRates({ cacheTtlMs: 0 });
 await getBcvRates({ cacheTtlMs: 60_000, cacheStaleTtlMs: 10 * 60_000 });
 ```
 
-## Default y controles básicos
+## Valores por defecto y controles básicos
 
-Toda URL consultada se cachea por **60 000 ms (1 minuto)** por defecto, en un LRU en memoria compartido por el proceso.
+Toda URL consultada se cachea durante **60 000 ms (un minuto)** por defecto, en un LRU en memoria compartido por el proceso.
 
-| Opción            | Default    | Efecto                                                       |
-| ----------------- | ---------- | ------------------------------------------------------------ |
-| `cacheTtlMs`      | `60000`    | TTL _fresh_. `0` desactiva completamente la caché.           |
-| `cacheStaleTtlMs` | `0`        | Ventana extra en la que se sirve stale si el upstream falla. |
-| `cacheStore`      | LRU global | Backend custom (ver más abajo).                              |
+| Opción            | Valor por defecto | Efecto                                                         |
+| ----------------- | ----------------- | -------------------------------------------------------------- |
+| `cacheTtlMs`      | `60000`           | TTL _fresh_. `0` desactiva completamente la caché.             |
+| `cacheStaleTtlMs` | `0`               | Ventana extra en la que se sirve _stale_ si el upstream falla. |
+| `cacheStore`      | LRU global        | Backend personalizado (ver más abajo).                         |
 
-La caché **nunca cachea errores**. Si el request falla, sólo se intenta servir un valor vencido si existe una entrada previa dentro de `cacheStaleTtlMs`.
+La caché **nunca cachea errores**. Si la petición falla, sólo se intenta servir un valor vencido cuando existe una entrada previa dentro de `cacheStaleTtlMs`.
 
 ## Estados posibles
 
@@ -43,17 +43,17 @@ stateDiagram-v2
     Fresh --> Stale: se alcanza expiresAt
     Stale --> Fresh: refresco exitoso del upstream
     Stale --> ServedStale: upstream falla<br/>y staleUntil > now
-    ServedStale --> Stale: se emite warn y se retorna<br/>el valor cacheado
+    ServedStale --> Stale: se emite warn y se devuelve<br/>el valor cacheado
     Stale --> Expired: se alcanza staleUntil
     Expired --> [*]: descartado o evictado por LRU
 ```
 
 1. **Fresh hit.** Dentro de `expiresAt`: devuelve la caché sin tocar el upstream.
-2. **Miss (fresh vencido).** Va al upstream. Si responde, actualiza la caché; si falla, intenta servir stale.
+2. **Miss (_fresh_ vencido).** Va al upstream. Si responde, actualiza la caché; si falla, intenta servir _stale_.
 3. **Stale serve.** La entrada sigue dentro de `staleUntil` y el upstream falló: devuelve el valor vencido y emite un `warn`.
-4. **Hard miss.** No hay entrada o se pasó `staleUntil`: propaga el error.
+4. **Hard miss.** No hay entrada, o bien se pasó `staleUntil`: propaga el error.
 
-## Stale-while-error: resiliencia ante caídas del BCV
+## Modo _stale-while-error_: resiliencia ante caídas del BCV
 
 El BCV tiene ventanas de indisponibilidad frecuentes. La opción `cacheStaleTtlMs` permite degradar de forma elegante:
 
@@ -65,7 +65,7 @@ const rates = await getBcvRates({
 });
 ```
 
-Cuando se sirve una respuesta stale, la librería emite:
+Cuando se sirve una respuesta _stale_, la librería emite:
 
 ```json
 {
@@ -76,9 +76,9 @@ Cuando se sirve una respuesta stale, la librería emite:
 }
 ```
 
-Monitorea esta línea para detectar cuánto tiempo lleva caído el BCV antes de que te afecte realmente.
+Monitorea esta línea para saber cuánto tiempo lleva caído el BCV antes de que te afecte realmente.
 
-### Combinación recomendada para APIs de producción
+### Combinación recomendada para APIs en producción
 
 ```typescript
 await getBcvRates({
@@ -91,9 +91,9 @@ await getBcvRates({
 
 Con esta configuración:
 
-- Hasta **3 reintentos** automáticos por petición.
-- La caché fresh de **1 minuto** evita golpear al BCV más de ~60 veces por hora.
-- El stale de **30 minutos** mantiene tu endpoint respondiendo aunque el BCV caiga por media hora.
+- Hasta **tres reintentos** automáticos por petición.
+- La caché _fresh_ de **un minuto** evita golpear al BCV más de unas 60 veces por hora.
+- El _stale_ de **30 minutos** mantiene tu endpoint respondiendo aunque el BCV caiga durante media hora.
 
 ## Evicción LRU
 
@@ -124,12 +124,12 @@ const stats = getCacheStats();
 // { hits: 142, misses: 37, staleServes: 3, size: 18 }
 ```
 
-| Campo         | Significado                                                               |
-| ------------- | ------------------------------------------------------------------------- |
-| `hits`        | Número total de llamadas servidas desde la caché fresca.                  |
-| `misses`      | Llamadas que tuvieron que ir al upstream.                                 |
-| `staleServes` | Llamadas degradadas que sirvieron caché stale ante un fallo del upstream. |
-| `size`        | Entradas actuales en la caché por defecto (no refleja los stores custom). |
+| Campo         | Significado                                                                 |
+| ------------- | --------------------------------------------------------------------------- |
+| `hits`        | Número total de llamadas servidas desde la caché fresca.                    |
+| `misses`      | Llamadas que tuvieron que ir al upstream.                                   |
+| `staleServes` | Llamadas degradadas que sirvieron caché _stale_ ante un fallo del upstream. |
+| `size`        | Entradas actuales en la caché por defecto (no refleja los stores custom).   |
 
 Úsalo para emitir métricas a Prometheus o Datadog:
 
@@ -143,7 +143,7 @@ setInterval(() => {
 }, 30_000);
 ```
 
-## Backend custom: la interfaz `CacheStore`
+## Backend personalizado: la interfaz `CacheStore`
 
 ```typescript
 interface CacheStore {
@@ -156,8 +156,8 @@ interface CacheStore {
 
 interface CacheEntry<T = unknown> {
   value: T;
-  expiresAt: number; // epoch ms — deadline de fresh
-  staleUntil: number; // epoch ms — deadline de stale
+  expiresAt: number; // epoch ms: deadline de fresh
+  staleUntil: number; // epoch ms: deadline de stale
 }
 ```
 
@@ -180,10 +180,10 @@ function redisBackedStore(localMaxEntries = 200): CacheStore {
     get size() {
       return local.size;
     },
-    get: (key) => local.get(key), // hot path síncrono
+    get: (key) => local.get(key), // ruta síncrona rápida
     set: (key, entry) => {
       local.set(key, entry);
-      // Fire-and-forget a Redis para persistencia compartida.
+      // Envío a Redis en segundo plano para persistencia compartida.
       redis.setEx(`bcv:${key}`, Math.ceil((entry.staleUntil - Date.now()) / 1000), JSON.stringify(entry));
     },
     delete: (key) => {
@@ -192,13 +192,13 @@ function redisBackedStore(localMaxEntries = 200): CacheStore {
     },
     clear: () => {
       local.clear();
-      // Purga por prefijo en Redis si aplica.
+      // Purga el prefijo en Redis si aplica.
     },
   };
 }
 ```
 
-Calentamiento del local desde Redis al arrancar:
+Calentamiento de la caché local desde Redis al arrancar:
 
 ```typescript
 async function warmFromRedis(store: CacheStore): Promise<void> {
@@ -216,17 +216,17 @@ async function warmFromRedis(store: CacheStore): Promise<void> {
 
 ## Claves de caché
 
-Las claves son **determinísticas** y se basan en la URL:
+Las claves son **deterministas** y se basan en la URL:
 
-| Función         | Clave                                               |
-| --------------- | --------------------------------------------------- |
-| `getBcvRates`   | `bcv:current` (sólo la portada)                     |
-| `getBcvHistory` | `bcv:history:<url completa incluyendo page y days>` |
-| `getTrmRates`   | `trm:<url completa incluyendo limit y offset>`      |
+| Función         | Clave                                             |
+| --------------- | ------------------------------------------------- |
+| `getBcvRates`   | `bcv:current` (sólo la portada)                   |
+| `getBcvHistory` | `bcv:history:<url completa, incluye page y days>` |
+| `getTrmRates`   | `trm:<url completa, incluye limit y offset>`      |
 
-Múltiples consumidores con distintos `cacheTtlMs` comparten la entrada: el primero que la puebla define el TTL efectivo hasta que expire.
+Varios consumidores con distintos `cacheTtlMs` comparten la entrada: el primero que la puebla define el TTL efectivo hasta que expire.
 
-Las claves son un detalle de implementación y pueden cambiar entre versiones menores. No construyas dependencias externas basadas en estos nombres.
+Las claves son un detalle de implementación y pueden cambiar entre versiones menores. No construyas dependencias externas basándote en estos nombres.
 
 ## API de administración
 
@@ -246,8 +246,8 @@ import {
 | `clearCache()`            | Vacía la caché por defecto. No toca los stores inyectados por llamada.   |
 | `createInMemoryCache(o?)` | Crea un LRU en memoria nuevo. Útil para inyectarlo en llamadas aisladas. |
 | `setDefaultCache(store)`  | Reemplaza la caché global por defecto. Ideal para backends con Redis.    |
-| `getDefaultCache()`       | Devuelve la instancia actual del default. Útil en pruebas.               |
-| `getCacheStats()`         | Snapshot de contadores más el tamaño del default.                        |
+| `getDefaultCache()`       | Devuelve la instancia actual de la caché por defecto. Útil en pruebas.   |
+| `getCacheStats()`         | _Snapshot_ de contadores más el tamaño de la caché por defecto.          |
 | `resetCacheStats()`       | Pone `hits`, `misses` y `staleServes` en cero. No toca las entradas.     |
 
 ## Casos de uso y configuraciones sugeridas
@@ -255,35 +255,45 @@ import {
 ### API pública de bajo tráfico
 
 ```typescript
-{ cacheTtlMs: 60_000, cacheStaleTtlMs: 5 * 60_000, retries: 2 }
+await getBcvRates({
+  cacheTtlMs: 60_000,
+  cacheStaleTtlMs: 5 * 60_000,
+  retries: 2,
+});
 ```
 
 ### Dashboard en tiempo real con muchos clientes
 
 ```typescript
-{ cacheTtlMs: 30_000, cacheStaleTtlMs: 30 * 60_000, retries: 3 }
+await getBcvRates({
+  cacheTtlMs: 30_000,
+  cacheStaleTtlMs: 30 * 60_000,
+  retries: 3,
+});
 ```
 
 ### Proceso por lotes diario o reporte
 
 ```typescript
-{ cacheTtlMs: 0, retries: 5, retryDelayMs: 2000 }
-// Sin caché: quieres dato fresco. Reintentos largos porque puedes esperar.
+await getBcvRates({
+  cacheTtlMs: 0,
+  retries: 5,
+  retryDelayMs: 2000,
+});
+// Sin caché: buscas dato fresco. Los reintentos largos son aceptables porque puedes esperar.
 ```
 
 ### Pruebas de integración
 
 ```typescript
-{
-  cacheTtlMs: 0;
-}
+await getBcvRates({ cacheTtlMs: 0 });
 // Evita resultados inestables por caché cruzada entre pruebas.
 ```
 
 ## Consideraciones importantes
 
-- **La caché vive en el heap del proceso.** No sobrevive a reinicios. Para persistencia, usa un `cacheStore` custom.
+- **La caché vive en el heap del proceso.** No sobrevive a reinicios. Para persistencia, usa un `cacheStore` personalizado.
 - **No hay invalidación fina.** La clave se basa en la URL; no puedes borrar «sólo USD» sin borrar toda la portada. Usa `clearCache()` o `store.delete(key)` manualmente.
-- **Las estadísticas son globales al proceso.** No se reinician automáticamente; llama `resetCacheStats()` en intervalos si las exportas.
-- **`cacheStaleTtlMs: 0` desactiva el stale-while-error.** Un fallo tras la expiración del fresh se propaga inmediatamente.
-- **Los stores custom no se reflejan en `getCacheStats().size`.** Los contadores (`hits`, `misses`, `staleServes`) sí se actualizan porque son globales a `withCache`.
+- **Las estadísticas son globales al proceso.** No se reinician automáticamente; llama a `resetCacheStats()` en intervalos si las exportas.
+- **`cacheStaleTtlMs: 0` desactiva el modo _stale-while-error_.** Un fallo tras la expiración del _fresh_ se propaga inmediatamente.
+- **Los stores personalizados no se reflejan en `getCacheStats().size`.** Los contadores (`hits`, `misses` y `staleServes`) sí se actualizan porque son globales a `withCache`.

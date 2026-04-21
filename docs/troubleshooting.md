@@ -12,7 +12,7 @@ Problemas comunes y cómo diagnosticarlos.
 curl -vI https://www.bcv.org.ve/
 ```
 
-Si ves `certificate has expired` o `self signed certificate`, el BCV está sirviendo certificados inválidos (es común).
+Si ves `certificate has expired` o `self signed certificate`, el BCV está sirviendo certificados inválidos (algo frecuente).
 
 **Soluciones:**
 
@@ -72,18 +72,18 @@ const result = await getBcvHistory({ logger: console });
 curl 'https://www.datos.gov.co/resource/mcec-87by.json?$limit=1'
 ```
 
-Si retorna 404, el dataset se renombró. Abre una incidencia en GitHub.
+Si devuelve 404, el dataset se renombró. Abre una incidencia en GitHub.
 
-## `getTrmRates` retorna `null`
+## `getTrmRates` devuelve `null`
 
-**Causa:** la API respondió con un HTTP 200 y `[]`. **No es un error.**
+**Causa:** la API respondió con HTTP 200 y `[]`. **No es un error.**
 
 Casos esperados:
 
-- Consulta con `offset` mayor al total de registros.
+- Consulta con un `offset` mayor al total de registros.
 - Primer día hábil del año, antes de que se publique la TRM.
 
-**Solución:** valida siempre `!== null` antes de usar el resultado:
+**Solución:** valida siempre `trm !== null` antes de usar el resultado:
 
 ```typescript
 const trm = await getTrmRates();
@@ -113,9 +113,9 @@ try {
 **Causa 1:** `cacheTtlMs: 0` desactiva la caché para esa llamada.
 
 ```typescript
-await getBcvRates(); // caché activa, default 60 segundos
-await getBcvRates({ cacheTtlMs: 0 }); // sin caché para esta llamada
-await getBcvRates({ cacheTtlMs: 5 * 60_000 }); // 5 minutos
+await getBcvRates(); // caché activa, 60 segundos por defecto.
+await getBcvRates({ cacheTtlMs: 0 }); // sin caché para esta llamada.
+await getBcvRates({ cacheTtlMs: 5 * 60_000 }); // 5 minutos.
 ```
 
 **Causa 2:** las llamadas con URLs distintas (`days` o `page` diferentes) no comparten entradas de caché.

@@ -66,7 +66,7 @@ async function persist(records: RateRecord[]): Promise<void> {
 ```typescript
 import cron from 'node-cron';
 
-cron.schedule('0 9 * * *', dailyRateJob); // todos los días a las 9:00.
+cron.schedule('0 9 * * *', dailyRateJob); // Todos los días a las 9:00.
 ```
 
 **Notas:**

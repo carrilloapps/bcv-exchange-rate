@@ -2,11 +2,9 @@
 
 ## Versiones soportadas
 
-| Versión | Soporte                                   |
-| ------- | ----------------------------------------- |
-| 2.x     | Activo                                    |
-| 1.x     | Sólo parches críticos hasta el 2026-10-21 |
-| < 1.0   | Sin soporte                               |
+| Versión | Soporte |
+| ------- | ------- |
+| 1.x     | Activo  |
 
 ## Reporte de vulnerabilidades
 
@@ -17,7 +15,7 @@ Repórtalas a través de uno de estos canales:
 1. GitHub Security Advisories: <https://github.com/carrilloapps/bcv-exchange-rate/security/advisories/new>.
 2. Correo electrónico al mantenedor: [m@carrillo.app](mailto:m@carrillo.app) con el asunto `[SECURITY] bcv-exchange-rate`.
 
-Incluye: versión afectada, pasos reproducibles, impacto y, si es posible, una prueba de concepto (PoC).
+Incluye la siguiente información: versión afectada, pasos reproducibles, impacto y, si es posible, una prueba de concepto (PoC).
 
 ## Proceso
 
@@ -29,6 +27,6 @@ Incluye: versión afectada, pasos reproducibles, impacto y, si es posible, una p
 
 Esta librería consume fuentes públicas gubernamentales (`bcv.org.ve` y `datos.gov.co`). Los principales vectores de riesgo son:
 
-- **TLS relajado.** `strictSSL: false` requiere desactivación explícita. Úsalo con conciencia.
+- **TLS relajado.** `strictSSL: false` requiere una desactivación explícita. Úsalo con conciencia.
 - **Scraping.** Si los portales devuelven contenido malicioso, la librería sólo lo parsea como HTML; no ejecuta scripts.
 - **Cadena de dependencias.** `axios` y `cheerio` se auditan con Dependabot de forma semanal.

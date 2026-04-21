@@ -41,10 +41,10 @@ Obtiene las tasas oficiales actuales del Banco Central de Venezuela y, opcionalm
 
 **Comportamiento:**
 
-- Si `includeCurrent` es `true` (default), consulta `https://www.bcv.org.ve/`.
-- Si `includeHistory` es `true` (default), delega a [`getBcvHistory`](#getbcvhistory).
-- Si una sección falla pero la otra se pidió también, la función **no lanza**: marca `status.<sección>: 'failed'` y retorna los datos disponibles.
-- Si la única sección pedida falla, la función lanza la excepción correspondiente.
+- Si `includeCurrent` es `true` (valor por defecto), consulta `https://www.bcv.org.ve/`.
+- Si `includeHistory` es `true` (valor por defecto), delega en [`getBcvHistory`](#getbcvhistory).
+- Si una sección falla y la otra también se solicitó, la función **no lanza**: marca `status.<sección>: 'failed'` y devuelve los datos disponibles.
+- Si la única sección solicitada falla, la función lanza la excepción correspondiente.
 
 **Lanza:**
 
@@ -75,7 +75,7 @@ if (result.status.current === 'failed') {
 function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination'>>;
 ```
 
-Obtiene únicamente el histórico bancario. Útil para reportes o auditorías que no necesitan la portada.
+Obtiene únicamente el historial bancario. Es útil para reportes o auditorías que no necesitan la portada.
 
 **Lanza:**
 
@@ -98,7 +98,7 @@ function getTrmRates(params?: TrmParams): Promise<TrmResponse | null>;
 
 Consulta la Tasa Representativa del Mercado de Colombia publicada por la Superintendencia Financiera en `datos.gov.co`.
 
-**Retorna:** `null` cuando la API responde con una colección vacía o con una carga no iterable.
+**Devuelve:** `null` cuando la API responde con una colección vacía o con una carga no iterable.
 
 **Lanza:**
 

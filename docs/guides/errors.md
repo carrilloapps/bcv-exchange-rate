@@ -1,6 +1,6 @@
 # Guía: manejo de errores
 
-La librería expone una jerarquía de clases de error tipada para que puedas discriminar casos sin inspeccionar `message`.
+La librería expone una jerarquía de clases de error tipada, para que puedas discriminar casos sin inspeccionar el campo `message`.
 
 ## Jerarquía
 
@@ -48,13 +48,13 @@ try {
 }
 ```
 
-## Mapa de qué lanza qué
+## Qué lanza cada función
 
-| Función         | `ValidationError` | `NetworkError`           | `TrmApiError` | `ParseError` | Retorna `null` |
-| --------------- | ----------------- | ------------------------ | ------------- | ------------ | -------------- |
-| `getBcvRates`   | sí                | sí (si sólo una sección) | no            | no           | no             |
-| `getBcvHistory` | sí                | sí                       | no            | no           | no             |
-| `getTrmRates`   | sí                | no                       | sí            | no           | sí (sin datos) |
+| Función         | `ValidationError` | `NetworkError`           | `TrmApiError` | `ParseError` | Devuelve `null` |
+| --------------- | ----------------- | ------------------------ | ------------- | ------------ | --------------- |
+| `getBcvRates`   | sí                | sí (si sólo una sección) | no            | no           | no              |
+| `getBcvHistory` | sí                | sí                       | no            | no           | no              |
+| `getTrmRates`   | sí                | no                       | sí            | no           | sí (sin datos)  |
 
 ## Contrato asimétrico de `getBcvRates`
 
@@ -81,7 +81,7 @@ if (result.status.current === 'failed' && result.status.history === 'failed') {
 }
 
 if (result.status.current === 'failed') {
-  console.warn('Tasa actual no disponible, se sirve el histórico');
+  console.warn('Tasa actual no disponible; se sirve el historial');
   return pickMostRecentFromHistory(result.history);
 }
 
@@ -149,12 +149,12 @@ await getBcvHistory({ retries: 5, retryDelayMs: 1000 });
 
 Detalles completos en la [guía de reintentos](./retries.md).
 
-## Valores parciales (`null`, `'failed'`)
+## Valores parciales (`null` y `'failed'`)
 
 La librería distingue tres formas de «no hay datos»:
 
-1. **`null`** (sólo `getTrmRates`): la API respondió sin registros. No es un error.
-2. **`status: 'failed'`** (`getBcvRates`): la sección se solicitó y falló, pero otra sección sí pudo servirse.
+1. **`null`** (sólo en `getTrmRates`): la API respondió sin registros. No es un error.
+2. **`status: 'failed'`** (en `getBcvRates`): la sección se solicitó y falló, pero otra sección sí pudo servirse.
 3. **Excepción**: nada útil pudo recuperarse.
 
-Trata cada caso según tu tolerancia. En dashboards, degrada silenciosamente con un aviso al usuario; en procesos por lotes, prefiere una falla ruidosa.
+Trata cada caso según tu tolerancia. En dashboards, degrada de forma silenciosa con un aviso al usuario; en procesos por lotes, prefiere un fallo ruidoso.

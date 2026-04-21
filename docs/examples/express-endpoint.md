@@ -1,6 +1,6 @@
 # Ejemplo: endpoint Express
 
-API HTTP que expone las tasas como JSON.
+API HTTP que expone las tasas en formato JSON.
 
 ```typescript
 import express from 'express';
@@ -52,6 +52,6 @@ app.listen(3000);
 
 **Buenas prácticas aplicadas:**
 
-- Caché de 60 s para amortiguar la carga sobre el BCV.
+- Caché de 60 segundos para amortiguar la carga sobre el BCV.
 - Códigos HTTP apropiados: `503` para el upstream caído y `204` cuando la TRM no tiene datos.
-- Los errores desconocidos se propagan al _handler_ de Express por defecto.
+- Los errores desconocidos se propagan al manejador de Express por defecto.
