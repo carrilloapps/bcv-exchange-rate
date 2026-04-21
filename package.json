@@ -1,6 +1,6 @@
 {
   "name": "bcv-exchange-rate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Librería profesional de Node.js para el rastreo de indicadores económicos oficiales de Venezuela (BCV) y Colombia (TRM - COP). Especializada en monedas fronterizas.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -54,12 +54,26 @@
     "economía",
     "scraping"
   ],
-  "author": "José Carrillo <m@carrillo.app> (https://carrillo.app)",
+  "author": {
+    "name": "José Carrillo",
+    "email": "m@carrillo.app",
+    "url": "https://carrillo.app"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/carrilloapps/bcv-exchange-rate/issues"
   },
   "homepage": "https://github.com/carrilloapps/bcv-exchange-rate#readme",
+  "funding": [
+    {
+      "type": "individual",
+      "url": "https://www.buymeacoffee.com/carrilloapps"
+    },
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/carrilloapps"
+    }
+  ],
   "dependencies": {
     "axios": "~1.15.0",
     "cheerio": "~1.2.0"

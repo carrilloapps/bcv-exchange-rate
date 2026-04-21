@@ -4,6 +4,16 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.1] - 2026-04-21
+
+### Cambiado
+
+- `package.json` ahora expone el autor en formato objeto (`name`, `email` y `url`) en lugar de cadena.
+- Añadido el campo `funding` con enlaces a _Buy Me a Coffee_ y GitHub Sponsors, visibles tras `npm install`.
+- `README.md` amplía la sección **Autor** con biografía breve, _stack_ habitual y _badges_ de contacto (web, correo, blog, GitHub, LinkedIn, X, Dev.to, Medium, Stack Overflow, Telegram y YouTube).
+- Nueva sección **Apoyar el proyecto** con _badges_ de _Buy Me a Coffee_ y GitHub Sponsors.
+- La sección de **Licencia** pasa a un pie breve que referencia el archivo `LICENSE`.
+
 ## [1.0.0] - 2026-04-21
 
 ### Añadido
@@ -36,4 +46,5 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 - **Documentación profesional** en `docs/` con guía de inicio, referencia de la API, arquitectura interna, guías temáticas (logging, errores, caché, reintentos, seguridad y TypeScript), ejemplos ejecutables y solución de problemas.
 - Licencia MIT.
 
+[1.0.1]: https://github.com/carrilloapps/bcv-exchange-rate/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/carrilloapps/bcv-exchange-rate/releases/tag/v1.0.0

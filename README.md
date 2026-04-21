@@ -114,6 +114,33 @@ Más detalles en [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 Reporta vulnerabilidades según lo descrito en [`SECURITY.md`](./SECURITY.md). **No abras incidencias públicas** para problemas de seguridad.
 
+## Autor
+
+**José Carrillo** — Senior Fullstack Developer y Tech Lead con más de diez años de experiencia construyendo software escalable, eficiente y seguro.
+
+Stack habitual: **NestJS**, **Go**, **React**, **React Native**, **Kotlin**, **Swift** y **Python** sobre **PostgreSQL** y **MongoDB**.
+
+[![Website](https://img.shields.io/badge/Website-carrillo.app-1f6feb?style=flat&logo=googlechrome&logoColor=white)](https://carrillo.app)
+[![Email](https://img.shields.io/badge/Email-m@carrillo.app-D14836?style=flat&logo=gmail&logoColor=white)](mailto:m@carrillo.app)
+[![Blog](https://img.shields.io/badge/Blog-carrillo.app%2Fblog-ff5722?style=flat&logo=rss&logoColor=white)](https://carrillo.app/blog)
+[![GitHub](https://img.shields.io/badge/GitHub-@carrilloapps-181717?style=flat&logo=github&logoColor=white)](https://github.com/carrilloapps)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-carrilloapps-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://linkedin.com/in/carrilloapps)
+[![X](https://img.shields.io/badge/X-@carrilloapps-000000?style=flat&logo=x&logoColor=white)](https://x.com/carrilloapps)
+[![Dev.to](https://img.shields.io/badge/Dev.to-carrilloapps-0A0A0A?style=flat&logo=devdotto&logoColor=white)](https://dev.to/carrilloapps)
+[![Medium](https://img.shields.io/badge/Medium-@carrilloapps-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@carrilloapps)
+[![Stack Overflow](https://img.shields.io/badge/StackOverflow-14580648-F48024?style=flat&logo=stackoverflow&logoColor=white)](https://stackoverflow.com/users/14580648)
+[![Telegram](https://img.shields.io/badge/Telegram-@carrilloapps-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://t.me/carrilloapps)
+[![YouTube](https://img.shields.io/badge/YouTube-carrilloapps-FF0000?style=flat&logo=youtube&logoColor=white)](https://www.youtube.com/@carrilloapps)
+
+Proyectos adicionales: [carrillo.app/proyectos](https://carrillo.app/proyectos). Publicaciones técnicas: [github.com/carrilloapps/papers](https://github.com/carrilloapps/papers). CV: [carrillo.app/cv.pdf](https://carrillo.app/cv.pdf).
+
+## Apoyar el proyecto
+
+Si esta librería te resulta útil, puedes invitarme un café o patrocinar el desarrollo continuo:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/carrilloapps)
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/carrilloapps)
+
 ## Licencia
 
-MIT © [José Carrillo](https://carrillo.app). Consulta el archivo [`LICENSE`](./LICENSE).
+Distribuida bajo la [licencia MIT](./LICENSE). © José Carrillo.
