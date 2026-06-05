@@ -4,8 +4,31 @@
  */
 import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
-import { NetworkError } from './errors';
+import { NetworkError, TlsError } from './errors';
 import { Logger, RequestOptions } from './types';
+
+/** Node/OpenSSL error codes that identify a TLS certificate validation failure. */
+const TLS_ERROR_CODES = new Set([
+    'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+    'CERT_HAS_EXPIRED',
+    'CERT_NOT_YET_VALID',
+    'DEPTH_ZERO_SELF_SIGNED_CERT',
+    'SELF_SIGNED_CERT_IN_CHAIN',
+    'UNABLE_TO_GET_ISSUER_CERT',
+    'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+    'ERR_TLS_CERT_ALTNAME_INVALID',
+    'CERT_SIGNATURE_FAILURE',
+    'CERT_UNTRUSTED',
+    'HOSTNAME_MISMATCH',
+]);
+
+/** Detects whether an axios/Node error is a TLS certificate validation failure. */
+export function isTlsCertificateError(error: unknown): boolean {
+    const err = error as { code?: string; cause?: { code?: string }; message?: string };
+    if (err?.code && TLS_ERROR_CODES.has(err.code)) return true;
+    if (err?.cause?.code && TLS_ERROR_CODES.has(err.cause.code)) return true;
+    return false;
+}
 
 const DEFAULT_USER_AGENT =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
@@ -40,6 +63,10 @@ async function sleep(ms: number): Promise<void> {
  * Performs a GET request retrying transient failures with exponential backoff
  * (`retryDelayMs * 2^attempt`). After exhausting `retries + 1` attempts the
  * last failure is wrapped in a `NetworkError` with the original cause attached.
+ *
+ * TLS certificate failures are NOT retried: a bad certificate is deterministic,
+ * so they raise a `TlsError` immediately with a hint about the `strictSSL`
+ * escape hatch.
  */
 export async function requestWithRetry<T>(
     url: string,
@@ -59,6 +86,18 @@ export async function requestWithRetry<T>(
             return response.data;
         } catch (error) {
             lastError = error;
+            if (isTlsCertificateError(error)) {
+                logger.error('TLS certificate validation failed', {
+                    url,
+                    code: (error as { code?: string }).code,
+                });
+                throw new TlsError(
+                    `TLS certificate validation failed for ${url}: ${(error as Error).message}. ` +
+                        'If you accept the man-in-the-middle risk, retry with { strictSSL: false } ' +
+                        '(library/MCP tools) or without --strict-ssl (CLI) to inspect the data anyway.',
+                    error
+                );
+            }
             if (attempt === retries) break;
             const delay = baseDelay * 2 ** attempt;
             logger.warn('Request failed, retrying', { url, attempt, delay });

@@ -14,8 +14,18 @@ export class BcvExchangeError extends Error {
     }
 }
 
-/** Network-level failures (timeouts, DNS, TLS, 5xx after retries). */
+/** Network-level failures (timeouts, DNS, 5xx after retries). */
 export class NetworkError extends BcvExchangeError {}
+
+/**
+ * TLS certificate validation failures (expired, self-signed, incomplete chain).
+ *
+ * Raised without retrying — a bad certificate is deterministic, so retrying
+ * only wastes time. The message recommends the `strictSSL: false` escape hatch
+ * (library/MCP) or omitting `--strict-ssl` (CLI) to inspect the data anyway,
+ * accepting the man-in-the-middle risk.
+ */
+export class TlsError extends NetworkError {}
 
 /** HTML parsing failures (unexpected document shape). */
 export class ParseError extends BcvExchangeError {}

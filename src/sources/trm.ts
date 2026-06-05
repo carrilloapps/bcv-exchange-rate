@@ -68,5 +68,6 @@ export async function getTrmRates(params: TrmParams = {}): Promise<TrmResponse |
         })),
         pagination: { limit, offset, page: null, count: payload.length, hasMore: null },
         range,
+        strictSSL: params.strictSSL !== false,
     };
 }

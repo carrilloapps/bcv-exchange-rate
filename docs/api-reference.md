@@ -57,6 +57,7 @@ Obtiene las tasas oficiales actuales del Banco Central de Venezuela y, opcionalm
 
 - `ValidationError`: `days < 1` o `page < 0`.
 - `NetworkError`: fallo transitorio no recuperado tras los reintentos, con todas las secciones solicitadas fallidas.
+- `TlsError` (subclase de `NetworkError`): certificado inválido — sin reintentos y con la recomendación de `strictSSL: false` en el mensaje.
 
 **Ejemplo:**
 
@@ -265,6 +266,10 @@ interface DateRange {
 
 Ventana de días aplicada a la consulta. Es `null` cuando no se aplicó ventana: TRM sin `days`, o BCV con el histórico omitido o fallido.
 
+### Eco `strictSSL`
+
+Las tres respuestas incluyen `strictSSL: boolean` — el valor **efectivo** de la política TLS usada en esa llamada. `false` indica que la data se obtuvo **sin** validación de certificados, para que el consumidor pueda auditar o descartar datos obtenidos en modo inseguro.
+
 ---
 
 ## Interfaces de respuesta
@@ -272,12 +277,7 @@ Ventana de días aplicada a la consulta. Es `null` cuando no se aplicó ventana:
 ### `BcvResponse`
 
 ```typescript
-interface BcvResponse {
-  current: Partial<Record<Currency, number>>;
-  effectiveDate: string;
-  history: BcvBankRate[];
-  pagination: Pagination;
-  range: DateRange | null;
+\n  strictSSL: boolean; // false = data obtenida sin validación TLS
   status: {
     current: SectionStatus;
     history: SectionStatus;
@@ -305,29 +305,14 @@ interface BcvBankRate {
 ### `TrmResponse`
 
 ```typescript
-interface TrmResponse {
-  current: {
-    value: number;
-    unit: string;
-    validityDate: string;
-  };
-  history: Array<{
-    value: number;
-    validityDate: string;
-  }>;
-  pagination: Pagination;
-  range: DateRange | null; // null cuando no se pasó days
+\n  strictSSL: boolean;
 }
 ```
 
 ### `BrlResponse`
 
 ```typescript
-interface BrlResponse {
-  current: BrlRate;
-  history: BrlRate[];
-  pagination: Pagination; // limit null cuando se devolvió la ventana completa
-  range: DateRange | null;
+\n  strictSSL: boolean;
 }
 ```
 
@@ -429,6 +414,10 @@ classDiagram
     class NetworkError {
         Fallo de red tras agotar los reintentos
     }
+    class TlsError {
+        Certificado TLS inválido — sin reintentos,
+        recomienda strictSSL false en el mensaje
+    }
     class ParseError {
         HTML inesperado (reservado)
     }
@@ -444,6 +433,7 @@ classDiagram
 
     Error <|-- BcvExchangeError
     BcvExchangeError <|-- NetworkError
+    NetworkError <|-- TlsError
     BcvExchangeError <|-- ParseError
     BcvExchangeError <|-- ValidationError
     BcvExchangeError <|-- TrmApiError

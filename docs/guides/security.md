@@ -8,9 +8,28 @@ El portal `bcv.org.ve` sirve con frecuencia certificados expirados o con cadena 
 
 Si necesitas relajar la validación, hazlo de forma explícita. Cada llamada con `strictSSL: false` emite un `warn` para que la decisión sea consciente.
 
-### Qué hacer si te encuentras con `NetworkError: ... certificate`
+## Comportamiento ante certificados inválidos: `TlsError`
 
-1. **Decisión consciente.** Desactiva con `strictSSL: false`. Sabrás que está ocurriendo porque la librería emite un `warn` en cada llamada.
+Cuando un upstream presenta un certificado expirado, autofirmado o con cadena incompleta, la librería lanza **`TlsError`** (subclase de `NetworkError`) **sin gastar reintentos** — el fallo de certificado es determinista — y el mensaje incluye la salida recomendada:
+
+```text
+TlsError: TLS certificate validation failed for https://www.bcv.org.ve/: certificate has expired.
+If you accept the man-in-the-middle risk, retry with { strictSSL: false } (library/MCP tools)
+or without --strict-ssl (CLI) to inspect the data anyway.
+```
+
+Además, **toda respuesta ecoa la política usada** en el campo `strictSSL`: si vale `false`, esa data se obtuvo sin validación de certificados y puedes auditarla o descartarla según tu tolerancia.
+
+```typescript
+const result = await getBcvRates({ strictSSL: false });
+result.strictSSL; // false → data obtenida en modo inseguro, queda registrado en la propia respuesta
+```
+
+En `getBcvRates` con ambas secciones solicitadas, un fallo TLS en una sección no tumba la otra: se marca `status.<sección>: 'failed'` y el resto se entrega.
+
+### Qué hacer si te encuentras con `TlsError`
+
+1. **Decisión consciente.** Desactiva con `strictSSL: false` (librería y tools MCP) u omite `--strict-ssl` (CLI, donde los comandos BCV ya lo traen desactivado). Sabrás que está ocurriendo porque la librería emite un `warn` en cada llamada y la respuesta queda marcada con `strictSSL: false`.
 2. **Opción preferida.** Utiliza un agente corporativo o un proxy que intercepte con una CA propia, y carga el bundle de la CA en Node mediante `NODE_EXTRA_CA_CERTS`.
 
 ```typescript

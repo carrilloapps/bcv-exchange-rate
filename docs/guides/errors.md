@@ -17,6 +17,10 @@ classDiagram
     class NetworkError {
         Falló la petición HTTP tras agotar reintentos
     }
+    class TlsError {
+        Certificado TLS inválido — sin reintentos,
+        el mensaje recomienda strictSSL false
+    }
     class ParseError {
         El HTML no coincide con lo esperado
     }
@@ -32,10 +36,29 @@ classDiagram
 
     Error <|-- BcvExchangeError
     BcvExchangeError <|-- NetworkError
+    NetworkError <|-- TlsError
     BcvExchangeError <|-- ParseError
     BcvExchangeError <|-- ValidationError
     BcvExchangeError <|-- TrmApiError
     BcvExchangeError <|-- BrlApiError
+```
+
+`TlsError` extiende `NetworkError`, así que `catch (err instanceof NetworkError)` también lo captura. Para tratarlo de forma específica (por ejemplo, reintentar automáticamente con `strictSSL: false` tras avisar al usuario), captúralo primero:
+
+```typescript
+import { TlsError, getBcvRates } from 'bcv-exchange-rate';
+
+try {
+  return await getBcvRates();
+} catch (err) {
+  if (err instanceof TlsError) {
+    console.warn('Certificado inválido en el upstream; se consulta sin validación TLS');
+    const degraded = await getBcvRates({ strictSSL: false });
+    // degraded.strictSSL === false: la respuesta queda marcada como obtenida sin validación
+    return degraded;
+  }
+  throw err;
+}
 ```
 
 Todas las clases exponen `cause`, que contiene el error original envuelto:

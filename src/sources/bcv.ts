@@ -45,6 +45,7 @@ export async function getBcvRates(params: BcvParams = {}): Promise<BcvResponse> 
         history: [],
         pagination: { limit: null, offset: null, page, count: 0, hasMore: null },
         range: null,
+        strictSSL: params.strictSSL !== false,
         status: {
             current: includeCurrent ? 'ok' : 'skipped',
             history: includeHistory ? 'ok' : 'skipped',

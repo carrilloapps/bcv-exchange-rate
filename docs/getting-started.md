@@ -72,6 +72,7 @@ Las tres fuentes comparten el mismo esqueleto: `current` + `history` + `paginati
   ],
   pagination: { limit: null, offset: null, page: 0, count: 1, hasMore: true },
   range: { startDate: '2026-04-14', endDate: '2026-04-21' },
+  strictSSL: true,                           // false = data obtenida sin validación TLS
   status: { current: 'ok', history: 'ok' }   // Desglose por sección
 }
 ```
@@ -85,7 +86,8 @@ El campo `status` es la forma recomendada de detectar fallos parciales: si solic
   current: { value: 3573.30, unit: 'COP', validityDate: '2026-04-21' },
   history: [ { value: 3590.00, validityDate: '2026-04-20' } ],
   pagination: { limit: 10, offset: 0, page: null, count: 10, hasMore: null },
-  range: null // ventana de fechas solo cuando pasas days
+  range: null, // ventana de fechas solo cuando pasas days
+  strictSSL: true
 }
 ```
 
@@ -98,7 +100,8 @@ El campo `status` es la forma recomendada de detectar fallos parciales: si solic
   current: { buy: 5.0409, sell: 5.0415, dateTime: '2026-06-03 13:06:26.54' },
   history: [ { buy: 5.0154, sell: 5.016, dateTime: '2026-06-02 13:10:30.711' } ],
   pagination: { limit: null, offset: 0, page: null, count: 2, hasMore: null },
-  range: { startDate: '2026-05-28', endDate: '2026-06-04' }
+  range: { startDate: '2026-05-28', endDate: '2026-06-04' },
+  strictSSL: true
 }
 ```
 

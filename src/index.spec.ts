@@ -13,6 +13,7 @@ import {
     resetCacheStats,
     ValidationError,
     NetworkError,
+    TlsError,
     TrmApiError,
     BrlApiError,
     BcvExchangeError,
@@ -21,6 +22,11 @@ import {
 
 const mock = new MockAdapter(axios);
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Builds a Node-style TLS certificate failure as axios would surface it. */
+function tlsFailure(code = 'CERT_HAS_EXPIRED'): () => Promise<never> {
+    return () => Promise.reject(Object.assign(new Error('certificate has expired'), { code }));
+}
 
 describe('bcv-exchange-rate', () => {
     const originalDefaultCache = getDefaultCache();
@@ -727,6 +733,74 @@ describe('bcv-exchange-rate', () => {
             expect(new TrmApiError('x')).toBeInstanceOf(BcvExchangeError);
             expect(new BrlApiError('x')).toBeInstanceOf(BcvExchangeError);
             expect(new ValidationError('x')).toBeInstanceOf(BcvExchangeError);
+            expect(new TlsError('x')).toBeInstanceOf(NetworkError);
+        });
+    });
+
+    describe('TLS failures', () => {
+        it('fails fast with TlsError and recommends the strictSSL escape hatch', async () => {
+            mock.onGet('https://www.bcv.org.ve/').reply(tlsFailure());
+            const promise = getBcvRates({ includeHistory: false, retries: 5 });
+            await expect(promise).rejects.toBeInstanceOf(TlsError);
+            await expect(promise).rejects.toThrow(/strictSSL: false/);
+            await expect(promise).rejects.toThrow(/--strict-ssl/);
+            // retries: 5 but TLS errors are deterministic — only one request was made
+            expect(mock.history.get).toHaveLength(1);
+        });
+
+        it('detects TLS failures wrapped in an error cause', async () => {
+            mock.onGet('https://www.bcv.org.ve/').reply(() =>
+                Promise.reject(
+                    Object.assign(new Error('request failed'), {
+                        cause: Object.assign(new Error('self signed'), {
+                            code: 'SELF_SIGNED_CERT_IN_CHAIN',
+                        }),
+                    })
+                )
+            );
+            await expect(getBcvRates({ includeHistory: false })).rejects.toBeInstanceOf(TlsError);
+        });
+
+        it('keeps serving the other BCV section when one fails by TLS', async () => {
+            mock.onGet('https://www.bcv.org.ve/').reply(tlsFailure('UNABLE_TO_VERIFY_LEAF_SIGNATURE'));
+            mock.onGet(/tasas-informativas-sistema-bancario/).reply(
+                200,
+                '<table class="views-table"><tbody><tr><td>04-06-2026</td><td>Banesco</td><td>594,71</td><td>625,72</td></tr></tbody></table>'
+            );
+            const result = await getBcvRates();
+            expect(result.status.current).toBe('failed');
+            expect(result.status.history).toBe('ok');
+            expect(result.history).toHaveLength(1);
+        });
+
+        it('wraps TRM and BRL TLS failures in their source errors with the hint preserved', async () => {
+            mock.onGet(/datos.gov.co/).reply(tlsFailure());
+            await expect(getTrmRates()).rejects.toThrow(/strictSSL: false/);
+
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(tlsFailure());
+            await expect(getBrlRates()).rejects.toThrow(/strictSSL: false/);
+        });
+    });
+
+    describe('strictSSL echo in responses', () => {
+        it('reports strictSSL: true by default in the three sources', async () => {
+            mock.onGet('https://www.bcv.org.ve/').reply(200, '<div id="dolar"><strong>48</strong></div>');
+            mock.onGet(/datos.gov.co/).reply(200, [
+                { valor: '3565.32', unidad: 'COP', vigenciahasta: '2026-06-05' },
+            ]);
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+                value: [{ cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-03 13:00:00.0' }],
+            });
+
+            expect((await getBcvRates({ includeHistory: false })).strictSSL).toBe(true);
+            expect((await getTrmRates())?.strictSSL).toBe(true);
+            expect((await getBrlRates())?.strictSSL).toBe(true);
+        });
+
+        it('flags the response when TLS validation was bypassed', async () => {
+            mock.onGet('https://www.bcv.org.ve/').reply(200, '<div id="dolar"><strong>48</strong></div>');
+            const result = await getBcvRates({ includeHistory: false, strictSSL: false });
+            expect(result.strictSSL).toBe(false);
         });
     });
 

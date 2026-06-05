@@ -22,7 +22,7 @@ Librería profesional de Node.js y **servidor MCP** para consultar indicadores e
 - **Caché en memoria** con TTL por llamada y _stale-while-error_ opcional.
 - **Jerarquía de errores tipada** (`NetworkError`, `TrmApiError`, `BrlApiError`, `ValidationError`).
 - **Logger basado en interfaz.** Compatible con winston, pino, bunyan o `console`, sin dependencias forzadas.
-- **TLS seguro por defecto** (`strictSSL: true`), con desactivación explícita cuando sea necesario.
+- **TLS seguro por defecto** (`strictSSL: true`), con desactivación explícita cuando sea necesario. Los fallos de certificado lanzan `TlsError` sin reintentos, con la recomendación del flag en el mensaje, y toda respuesta ecoa `strictSSL` para saber si la data se obtuvo sin validación.
 - **Dual CJS/ESM** con declaraciones `.d.ts`.
 - **Estado por sección** (`status.current`, `status.history`) para detectar fallos parciales.
 - **Cobertura del 100 %** forzada en CI.
@@ -200,7 +200,8 @@ Las tres fuentes comparten el mismo esqueleto de salida. Los campos que no aplic
     count:   number,          // registros devueltos
     hasMore: boolean | null   // null: la fuente no puede saberlo (TRM, BRL)
   },
-  range: { startDate, endDate } | null   // ventana de días aplicada (ISO 8601)
+  range: { startDate, endDate } | null,  // ventana de días aplicada (ISO 8601)
+  strictSSL: boolean                     // false = la data se obtuvo SIN validación TLS
 }
 ```
 
@@ -212,6 +213,12 @@ Las tres fuentes comparten el mismo esqueleto de salida. Los campos que no aplic
 | `range`                       | ventana de `days`       | ventana de `days` o `null` sin filtro | ventana de `days`                     |
 
 `BcvResponse` añade además `effectiveDate` y `status` (fallos parciales por sección).
+
+### Comportamiento ante certificados TLS inválidos
+
+- Un certificado expirado, autofirmado o con cadena incompleta lanza **`TlsError`** de inmediato (sin gastar reintentos: el fallo es determinista). El mensaje incluye la recomendación: reintentar con `strictSSL: false` (librería/tools MCP) o sin `--strict-ssl` (CLI) si aceptas el riesgo.
+- En `getBcvRates` con ambas secciones, un fallo TLS en una sección **no tumba la otra**: se marca `status.<sección>: 'failed'` y el resto se entrega.
+- El campo `strictSSL` de la respuesta indica siempre cómo se obtuvo la data: `false` significa que la validación TLS estuvo desactivada en esa llamada.
 
 ## Documentación
 

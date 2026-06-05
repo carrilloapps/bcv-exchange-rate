@@ -33,6 +33,7 @@ export {
 export {
     BcvExchangeError,
     NetworkError,
+    TlsError,
     ParseError,
     ValidationError,
     TrmApiError,

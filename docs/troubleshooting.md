@@ -2,9 +2,9 @@
 
 Problemas comunes y cómo diagnosticarlos.
 
-## `NetworkError: ... certificate`
+## `TlsError: TLS certificate validation failed`
 
-**Causa:** `strictSSL` está en `true` por defecto y la cadena de certificados del BCV no valida en tu entorno.
+**Causa:** `strictSSL` está en `true` por defecto y la cadena de certificados del BCV no valida en tu entorno. La librería falla rápido (sin reintentos: el fallo es determinista) y el propio mensaje del error indica la salida: reintentar con `strictSSL: false` (librería/tools MCP) o sin `--strict-ssl` (CLI) si aceptas el riesgo. Las respuestas obtenidas así quedan marcadas con `strictSSL: false`.
 
 **Diagnóstico:**
 

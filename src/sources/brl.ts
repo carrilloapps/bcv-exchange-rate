@@ -81,5 +81,6 @@ export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse |
         history: rest.map(toRate),
         pagination: { limit: limit ?? null, offset, page: null, count: records.length, hasMore: null },
         range: { startDate: formatIsoDate(startDate), endDate: formatIsoDate(today) },
+        strictSSL: params.strictSSL !== false,
     };
 }

@@ -186,6 +186,11 @@ export interface BcvResponse {
     pagination: Pagination;
     /** Date window of the historical query. `null` when the section was skipped or failed. */
     range: DateRange | null;
+    /**
+     * Echo of the effective TLS policy used for this call. `false` means the
+     * data was fetched WITHOUT certificate validation (`strictSSL: false`).
+     */
+    strictSSL: boolean;
     /** Status breakdown so consumers can react to partial failures. */
     status: {
         current: SectionStatus;
@@ -205,6 +210,11 @@ export interface TrmResponse {
     pagination: Pagination;
     /** Date window applied via `days`. `null` when `days` was not provided. */
     range: DateRange | null;
+    /**
+     * Echo of the effective TLS policy used for this call. `false` means the
+     * data was fetched WITHOUT certificate validation (`strictSSL: false`).
+     */
+    strictSSL: boolean;
 }
 
 /** A single PTAX quotation (BRL per USD). */
@@ -227,4 +237,9 @@ export interface BrlResponse {
     pagination: Pagination;
     /** Date window of the query. */
     range: DateRange | null;
+    /**
+     * Echo of the effective TLS policy used for this call. `false` means the
+     * data was fetched WITHOUT certificate validation (`strictSSL: false`).
+     */
+    strictSSL: boolean;
 }

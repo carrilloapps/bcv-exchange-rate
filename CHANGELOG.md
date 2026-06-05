@@ -21,6 +21,8 @@ Guía de migración 1.x → 2.0:
 
 ### Añadido
 
+- **`TlsError`** (subclase de `NetworkError`): los fallos de certificado TLS (expirado, autofirmado, cadena incompleta) fallan rápido sin gastar reintentos y el mensaje recomienda la salida (`strictSSL: false` en librería/tools MCP, sin `--strict-ssl` en la CLI).
+- **Eco `strictSSL` en las tres respuestas**: el campo indica la política TLS efectiva de la llamada; `false` marca la data como obtenida sin validación de certificados.
 - **`days` en `getTrmRates`**: ventana de días hacia atrás vía `$where vigenciahasta >=` (sin default: el comportamiento previo se mantiene si no se pasa). Disponible también como `--days` en la CLI y atributo `days` en la tool MCP `get_trm_rates`.
 - **`range` en las tres respuestas**: ventana de fechas aplicada en ISO 8601 (`null` cuando no aplica).
 - **`pagination.count` y `pagination.hasMore` en BCV**: total de filas devueltas y si el portal reporta más páginas.
