@@ -4,6 +4,13 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [1.3.0] - 2026-06-05
+
+### Añadido
+
+- **Paginación en `getBrlRates`**: parámetros opcionales `limit` (1-1000, OData `$top`) y `offset` (`$skip`), homogéneos con `getTrmRates`. La respuesta incluye un bloque `pagination: { limit, offset, count }` donde `limit` es `null` cuando no se solicitó (se devolvió la ventana completa). El comportamiento por defecto no cambia: sin `limit`, la ventana se devuelve íntegra.
+- Flags `--limit` y `--offset` en el comando `brl` de la CLI y atributos `limit`/`offset` en la tool MCP `get_brl_rates`.
+
 ## [1.2.0] - 2026-06-05
 
 ### Añadido

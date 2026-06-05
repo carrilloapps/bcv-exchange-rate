@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency, RequestOptions } from './index';
 
 const SERVER_NAME = 'bcv-exchange-rate';
-const SERVER_VERSION = '1.2.0';
+const SERVER_VERSION = '1.3.0';
 
 const CURRENCY_CODES = ['USD', 'EUR', 'CNY', 'TRY', 'RUB'] as const;
 
@@ -179,12 +179,25 @@ export function createServer(): McpServer {
                 'abiertos del Banco Central do Brasil. Devuelve null si la ventana no contiene cotizaciones.',
             inputSchema: {
                 days: z.number().int().min(1).optional().describe('Ventana de días hacia atrás. Default: 7.'),
+                limit: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .max(1000)
+                    .optional()
+                    .describe('Máximo de registros (1-1000). Default: toda la ventana.'),
+                offset: z
+                    .number()
+                    .int()
+                    .min(0)
+                    .optional()
+                    .describe('Registros a saltar para paginar. Default: 0.'),
                 ...sharedOptionsShape,
             },
         },
-        async ({ days, ...shared }) => {
+        async ({ days, limit, offset, ...shared }) => {
             try {
-                const result = await getBrlRates({ ...toRequestOptions(shared), days });
+                const result = await getBrlRates({ ...toRequestOptions(shared), days, limit, offset });
                 return jsonResult(result);
             } catch (error) {
                 return errorResult(error);

@@ -66,7 +66,7 @@ describe('mcp-server', () => {
             expect.arrayContaining(['limit', 'offset', 'timeout', 'retries', 'cacheTtlMs'])
         );
         expect(schemaOf('get_brl_rates')).toEqual(
-            expect.arrayContaining(['days', 'timeout', 'retries', 'cacheTtlMs'])
+            expect.arrayContaining(['days', 'limit', 'offset', 'timeout', 'retries', 'cacheTtlMs'])
         );
     });
 

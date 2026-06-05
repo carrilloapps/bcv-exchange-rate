@@ -96,6 +96,21 @@ describe('cli', () => {
             expect(JSON.parse(out[0]).current.value).toBe(3565.32);
         });
 
+        it('passes limit and offset to the brl command', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+                value: [
+                    {
+                        cotacaoCompra: 5.0,
+                        cotacaoVenda: 5.01,
+                        dataHoraCotacao: '2026-06-02 13:00:00.0',
+                    },
+                ],
+            });
+            const { io, out } = makeIo();
+            expect(await runCli(['brl', '--limit', '1', '--offset', '1'], io)).toBe(0);
+            expect(JSON.parse(out[0]).pagination).toEqual({ limit: 1, offset: 1, count: 1 });
+        });
+
         it('runs the brl command', async () => {
             mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
                 value: [

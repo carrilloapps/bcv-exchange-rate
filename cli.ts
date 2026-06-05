@@ -1,6 +1,6 @@
 import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency } from './index';
 
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 export const HELP = `bcv-exchange-rate v${VERSION} — tasas de cambio oficiales de Venezuela, Colombia y Brasil
 
@@ -34,6 +34,8 @@ Flags de trm:
 
 Flags de brl:
   --days N               Ventana de días hacia atrás. Default: 7.
+  --limit N              Máximo de registros (1-1000). Default: toda la ventana.
+  --offset N             Registros a saltar para paginar. Default: 0.
 
 Flags globales:
   --timeout MS           Timeout de la petición en ms. Default: 25000.
@@ -185,7 +187,7 @@ export async function runCli(
         } else if (command === 'trm') {
             result = await getTrmRates({ ...shared, limit, offset });
         } else {
-            result = await getBrlRates({ ...shared, days });
+            result = await getBrlRates({ ...shared, days, limit, offset });
         }
         io.out(JSON.stringify(result, null, 2));
         return 0;

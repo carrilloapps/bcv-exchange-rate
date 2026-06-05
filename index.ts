@@ -189,6 +189,14 @@ export interface TrmResponse {
 export interface BrlParams extends RequestOptions {
     /** Lookback window in days. Must be ≥ 1. Default: `7`. */
     days?: number;
+    /**
+     * Maximum records to return (OData `$top`). Must be between 1 and 1000.
+     * Default: unlimited — the whole window is returned, preserving the
+     * behaviour previous to its introduction.
+     */
+    limit?: number;
+    /** Records to skip for pagination (OData `$skip`). Must be ≥ 0. Default: `0`. */
+    offset?: number;
 }
 
 /** A single PTAX quotation (BRL per USD). */
@@ -209,6 +217,11 @@ export interface BrlResponse {
     history: BrlRate[];
     /** Queried window in ISO 8601 (`YYYY-MM-DD`) plus total record count. */
     range: { startDate: string; endDate: string; count: number };
+    /**
+     * Pagination metadata, mirroring `TrmResponse`. `limit` is `null` when no
+     * limit was requested (the whole window was returned).
+     */
+    pagination: { limit: number | null; offset: number; count: number };
 }
 
 /**
@@ -660,8 +673,15 @@ function formatIsoDate(date: Date): string {
 export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse | null> {
     const logger = resolveLogger(params);
     const days = params.days ?? 7;
+    const limit = params.limit;
+    const offset = params.offset ?? 0;
 
     assertPositiveInt(days, 'days', 1);
+    if (limit !== undefined) {
+        assertPositiveInt(limit, 'limit', 1);
+        if (limit > 1000) throw new ValidationError('Invalid "limit": must be <= 1000.');
+    }
+    assertPositiveInt(offset, 'offset', 0);
 
     const config = buildAxiosConfig(params, logger);
 
@@ -669,13 +689,17 @@ export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse |
     const startDate = new Date();
     startDate.setDate(today.getDate() - days);
 
-    const url =
+    // `$top`/`$skip` are only appended when requested so that the default
+    // behaviour (return the whole window) stays unchanged.
+    let url =
         'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/' +
         'CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)' +
         `?@dataInicial='${formatPtaxDate(startDate)}'&@dataFinalCotacao='${formatPtaxDate(today)}'` +
         '&$orderby=dataHoraCotacao%20desc&$format=json';
+    if (limit !== undefined) url += `&$top=${limit}`;
+    if (offset > 0) url += `&$skip=${offset}`;
 
-    logger.info('Requesting Brazil PTAX', { days });
+    logger.info('Requesting Brazil PTAX', { days, limit, offset });
 
     let payload: { value?: PtaxQuotation[] };
     try {
@@ -707,5 +731,6 @@ export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse |
             endDate: formatIsoDate(today),
             count: records.length,
         },
+        pagination: { limit: limit ?? null, offset, count: records.length },
     };
 }

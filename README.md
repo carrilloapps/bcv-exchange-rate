@@ -84,7 +84,7 @@ npx bcv-exchange-rate                  # tasas BCV (comando por defecto) + hist�
 npx bcv-exchange-rate bcv --currencies USD,EUR --days 3 --no-history
 npx bcv-exchange-rate history --days 3 # solo histórico bancario BCV
 npx bcv-exchange-rate trm --limit 5    # TRM de Colombia
-npx bcv-exchange-rate brl --days 7     # dólar PTAX de Brasil
+npx bcv-exchange-rate brl --days 30 --limit 5 --offset 5   # dólar PTAX de Brasil, paginado
 npx bcv-exchange-rate --help           # todos los comandos y flags
 ```
 
@@ -172,12 +172,14 @@ Tasa Representativa del Mercado (COP por USD) desde el portal de datos abiertos 
 
 Cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos abiertos del Banco Central do Brasil. Devuelve `null` cuando la ventana no contiene cotizaciones (fines de semana o feriados).
 
-| Atributo     | Tipo          | Default | Descripción                                        |
-| ------------ | ------------- | ------- | -------------------------------------------------- |
-| `days`       | `integer ≥ 1` | `7`     | Ventana de días hacia atrás.                       |
-| `timeout`    | `integer ≥ 1` | `25000` | Timeout de la petición en ms.                      |
-| `retries`    | `integer ≥ 0` | `2`     | Reintentos ante fallos transitorios.               |
-| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+| Atributo     | Tipo             | Default         | Descripción                                        |
+| ------------ | ---------------- | --------------- | -------------------------------------------------- |
+| `days`       | `integer ≥ 1`    | `7`             | Ventana de días hacia atrás.                       |
+| `limit`      | `integer 1-1000` | toda la ventana | Máximo de registros a devolver (OData `$top`).     |
+| `offset`     | `integer ≥ 0`    | `0`             | Registros a saltar para paginar (OData `$skip`).   |
+| `timeout`    | `integer ≥ 1`    | `25000`         | Timeout de la petición en ms.                      |
+| `retries`    | `integer ≥ 0`    | `2`             | Reintentos ante fallos transitorios.               |
+| `cacheTtlMs` | `integer ≥ 0`    | `60000`         | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 Todas las tools devuelven el resultado como JSON en el contenido de texto de la respuesta. Los errores de la librería (red, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.
 

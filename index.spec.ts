@@ -631,6 +631,34 @@ describe('bcv-exchange-rate', () => {
             await expect(getBrlRates({ days: 1.5 })).rejects.toBeInstanceOf(ValidationError);
         });
 
+        it('validates limit and offset', async () => {
+            await expect(getBrlRates({ limit: 0 })).rejects.toBeInstanceOf(ValidationError);
+            await expect(getBrlRates({ limit: 1001 })).rejects.toBeInstanceOf(ValidationError);
+            await expect(getBrlRates({ offset: -1 })).rejects.toBeInstanceOf(ValidationError);
+        });
+
+        it('omits $top/$skip by default and reports a null limit', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+                value: [{ cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-03 13:00:00.0' }],
+            });
+            const result = await getBrlRates();
+            const url = mock.history.get[mock.history.get.length - 1].url ?? '';
+            expect(url).not.toContain('$top');
+            expect(url).not.toContain('$skip');
+            expect(result?.pagination).toEqual({ limit: null, offset: 0, count: 1 });
+        });
+
+        it('paginates with $top/$skip when limit and offset are provided', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+                value: [{ cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-02 13:00:00.0' }],
+            });
+            const result = await getBrlRates({ limit: 1, offset: 2 });
+            const url = mock.history.get[mock.history.get.length - 1].url ?? '';
+            expect(url).toContain('$top=1');
+            expect(url).toContain('$skip=2');
+            expect(result?.pagination).toEqual({ limit: 1, offset: 2, count: 1 });
+        });
+
         it('reuses cached responses within the TTL', async () => {
             mock.onGet(/olinda\.bcb\.gov\.br/)
                 .replyOnce(200, {
