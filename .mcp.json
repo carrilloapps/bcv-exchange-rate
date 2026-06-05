@@ -4,6 +4,11 @@
       "type": "stdio",
       "command": "codegraph",
       "args": ["serve", "--mcp"]
+    },
+    "skill-rules": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "skill-rules", "mcp"]
     }
   }
 }

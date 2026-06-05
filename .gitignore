@@ -48,3 +48,8 @@ Desktop.ini
 # Archivos internos de herramientas de autoría
 .claude/
 .agents/
+# skill-rules [start]
+.skill-rules/
+.claude/skills
+.agents/skills
+# skill-rules [end]
