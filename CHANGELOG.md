@@ -4,6 +4,18 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-06-05
+
+### Añadido
+
+- **Modo CLI**: `npx bcv-exchange-rate [comando] [flags]` imprime el resultado como JSON y termina. Comandos: `bcv` (por defecto), `history`, `trm` y `brl`, con flags por comando (`--currencies`, `--days`, `--page`, `--limit`, `--offset`, `--no-current`, `--no-history`, `--strict-ssl`) y globales (`--timeout`, `--retries`, `--help`, `--version`).
+- **Alias global `xrate`**: con `npm install -g bcv-exchange-rate`, `xrate` equivale al binario principal.
+- **Detección de contexto en el binario**: en una terminal interactiva sin argumentos ejecuta la consulta BCV por defecto; cuando lo lanza un cliente MCP (stdin por pipe) inicia el servidor stdio como antes. Las configuraciones MCP existentes no requieren cambios.
+
+### Cambiado
+
+- En la CLI, las consultas al BCV usan `strictSSL: false` por defecto (igual que las tools MCP) por la cadena de certificados incompleta del portal; se activa con `--strict-ssl`. La librería mantiene su default estricto.
+
 ## [1.1.0] - 2026-06-04
 
 ### Añadido

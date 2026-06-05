@@ -75,13 +75,34 @@ if (bcv.status.current === 'failed') {
 }
 ```
 
-## Servidor MCP
+## CLI
 
-El paquete incluye un servidor [Model Context Protocol](https://modelcontextprotocol.io) por **stdio**, listo para usarse con `npx` sin instalación previa:
+Consulta cualquier fuente directamente desde la terminal con `npx` (o con `xrate` si lo instalas global):
 
 ```bash
-npx bcv-exchange-rate
+npx bcv-exchange-rate                  # tasas BCV (comando por defecto) + histórico
+npx bcv-exchange-rate bcv --currencies USD,EUR --days 3 --no-history
+npx bcv-exchange-rate history --days 3 # solo histórico bancario BCV
+npx bcv-exchange-rate trm --limit 5    # TRM de Colombia
+npx bcv-exchange-rate brl --days 7     # dólar PTAX de Brasil
+npx bcv-exchange-rate --help           # todos los comandos y flags
 ```
+
+La salida es JSON formateado por stdout (exit 0); los errores van por stderr (exit 1), apto para pipes y scripts.
+
+Instalación global con alias corto:
+
+```bash
+npm install -g bcv-exchange-rate
+xrate                # equivale a "xrate bcv"
+xrate trm --limit 1
+```
+
+Flags globales de todos los comandos: `--timeout MS` (default `25000`), `--retries N` (default `2`). Los comandos del BCV aceptan `--strict-ssl` para activar la validación TLS (desactivada por defecto en la CLI: el portal del BCV sirve una cadena de certificados incompleta).
+
+## Servidor MCP
+
+El mismo binario es un servidor [Model Context Protocol](https://modelcontextprotocol.io) por **stdio**: cuando lo lanza un cliente MCP (stdin por pipe, sin argumentos) sirve el protocolo automáticamente; cuando lo ejecuta una persona en una terminal interactiva actúa como CLI.
 
 ### Configuración en clientes MCP
 
