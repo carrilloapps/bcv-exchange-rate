@@ -15,7 +15,8 @@ Librería profesional de Node.js y **servidor MCP** para consultar indicadores e
 ## Características
 
 - **Multi-indicador.** Tasas oficiales del BCV (`USD`, `EUR`, `CNY`, `TRY`, `RUB`), TRM de Colombia (`COP`) y dólar PTAX de Brasil (`BRL`).
-- **Servidor MCP integrado.** `npx bcv-exchange-rate` expone las cuatro fuentes como _tools_ del [Model Context Protocol](https://modelcontextprotocol.io) para Claude, Cursor y cualquier cliente MCP.
+- **Servidor MCP integrado.** `npx bcv-exchange-rate` expone las tres fuentes en cuatro _tools_ del [Model Context Protocol](https://modelcontextprotocol.io) para Claude, Cursor y cualquier cliente MCP.
+- **CLI incluida.** Consulta cualquier fuente desde la terminal (`npx bcv-exchange-rate` o el alias global `xrate`) con salida JSON apta para scripts.
 - **Historial bancario paginado.** Tasas de compra y venta por institución financiera venezolana.
 - **Reintentos automáticos** con backoff exponencial configurable.
 - **Caché en memoria** con TTL por llamada y _stale-while-error_ opcional.
@@ -246,7 +247,7 @@ npm install
 npm test             # Jest con cobertura del 100 % forzada.
 npm run lint         # ESLint.
 npm run format       # Prettier.
-npm run build        # Dual CJS/ESM más declaraciones.
+npm run build        # Dual CJS/ESM, declaraciones, CLI y servidor MCP.
 ```
 
 Más detalles en [`CONTRIBUTING.md`](./CONTRIBUTING.md).

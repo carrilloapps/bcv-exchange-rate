@@ -34,16 +34,27 @@ Reglas:
 
 ## Sobre el proyecto
 
-- Librería Node.js (TypeScript) para rastrear tasas de cambio oficiales: BCV (Venezuela) y TRM (Colombia).
-- Build dual CJS/ESM + tipos: `npm run build`. Node >= 20.
-- Tests: `npm test` (Jest con cobertura). Lint: `npm run lint`. Formato: `npm run format`.
-- Dependencias de runtime: `axios`, `cheerio`. `winston` es peer opcional.
+- Librería Node.js (TypeScript), CLI y servidor MCP para tasas de cambio oficiales: BCV (Venezuela, scraping), TRM (Colombia, API Socrata) y PTAX/BRL (Brasil, API OData del BCB).
+- **Arquitectura modular en `src/`**: `types`, `errors`, `validation`, `format`, `logger`, `cache`, `http`, `sources/{bcv,trm,brl}`, `cli`, `mcp-server`; `src/index.ts` es el barrel de la API pública. Detalle en `docs/architecture.md`.
+- **Contrato de respuesta unificado (v2)**: las tres fuentes devuelven `current` + `history` + `pagination { limit, offset, page, count, hasMore }` + `range`; los campos que no aplican son `null`, nunca se omiten.
+- Binario `bin/mcp.js` con detección de contexto: argumentos o TTY → CLI; stdin por pipe → servidor MCP (stdio). Alias global: `xrate`.
+- Build dual CJS/ESM + tipos + CLI/MCP: `npm run build`. Node >= 20.
+- Tests: `npm test` (Jest, 3 suites, cobertura 100 % forzada sobre los módulos de la librería). Lint: `npm run lint`. Formato: `npm run format`.
+- Dependencias de runtime: `axios`, `cheerio`, `@modelcontextprotocol/sdk`, `zod`. `winston` es peer opcional.
 - Documentación y mensajes orientados al usuario en español; identificadores de código en inglés (en_US).
+
+## Gotchas operativos (no romper)
+
+- El filtro de fechas del portal BCV (Drupal-ES) exige meses abreviados de 3 letras **excepto `Mayo`** (palabra completa). Ver `src/format.ts`.
+- El portal BCV sirve una cadena TLS incompleta: la librería usa `strictSSL: true` por defecto, pero CLI y tools MCP lo relajan a `false` (documentado).
+- La API PTAX exige fechas `MM-DD-YYYY`; `getTrmRates`/`getBrlRates` devuelven `null` ante ventana sin datos (no es error).
+- Validar siempre contra los upstream reales antes de dar por cerrado un cambio de scraping/API.
 
 ## Flujo de trabajo recomendado
 
 1. `codegraph_explore` para entender el área afectada.
 2. `codegraph_impact` / `codegraph_callers` antes de cambiar APIs.
-3. Editar código.
-4. `npm run lint && npm test` antes de dar por terminado.
-5. Comunicar resultados en modo caveman.
+3. Editar código (y actualizar `docs/` + `CHANGELOG.md` si cambia la API pública).
+4. `npm run lint && npm test && npm run build` antes de dar por terminado.
+5. Verificar en vivo contra las fuentes reales cuando el cambio toque scraping o URLs.
+6. Comunicar resultados en modo caveman.

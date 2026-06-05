@@ -46,6 +46,5 @@ Desktop.ini
 *.tgz
 
 # Archivos internos de herramientas de autoría
-CLAUDE.md
 .claude/
 .agents/

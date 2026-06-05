@@ -92,6 +92,29 @@ if (!trm) {
 }
 ```
 
+## `getBrlRates` devuelve `null`
+
+**Causa:** la ventana consultada no contiene cotizaciones PTAX. **No es un error.**
+
+Casos esperados:
+
+- La ventana solo abarca fines de semana o feriados brasileños (PTAX se publica una vez por día hábil, alrededor de las 13:00 hora de Brasilia).
+- Un `offset` mayor al total de cotizaciones de la ventana.
+
+**Solución:** amplía `days` o valida `brl !== null` antes de usar el resultado.
+
+## `BrlApiError` recurrente
+
+**Causa:** la API de Olinda (`olinda.bcb.gov.br`) está temporalmente caída o rechaza la petición.
+
+**Diagnóstico:**
+
+```bash
+curl "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@dataInicial='06-01-2026'&@dataFinalCotacao='06-05-2026'&%24format=json"
+```
+
+**Soluciones:** sube `retries`, habilita `cacheStaleTtlMs` para servir el último valor conocido, o abre una incidencia si el formato de la respuesta cambió.
+
 ## Los reintentos no tienen efecto
 
 **Causa:** tu error es un `ValidationError`, que no se reintenta por diseño (no es transitorio).
