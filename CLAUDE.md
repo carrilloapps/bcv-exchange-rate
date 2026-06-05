@@ -18,18 +18,18 @@ Para correr un solo archivo de tests: `npx jest src/cli.spec.ts`.
 
 ## Mapa rápido del código
 
-| Quiero tocar...                  | Archivo                              |
-| -------------------------------- | ------------------------------------ |
-| Tipos públicos / contrato v2     | `src/types.ts`                       |
-| Scraping del BCV                 | `src/sources/bcv.ts`                 |
-| API TRM (Colombia)               | `src/sources/trm.ts`                 |
-| API PTAX (Brasil)                | `src/sources/brl.ts`                 |
-| Caché / stale-while-error        | `src/cache.ts`                       |
-| Reintentos / TLS / headers       | `src/http.ts`                        |
-| Formatos de fecha (gotcha Mayo)  | `src/format.ts`                      |
-| CLI (comandos y flags)           | `src/cli.ts`                         |
-| Tools MCP (esquemas zod)         | `src/mcp-server.ts`                  |
-| Punto de entrada del binario     | `bin/mcp.js`                         |
+| Quiero tocar...                 | Archivo              |
+| ------------------------------- | -------------------- |
+| Tipos públicos / contrato v2    | `src/types.ts`       |
+| Scraping del BCV                | `src/sources/bcv.ts` |
+| API TRM (Colombia)              | `src/sources/trm.ts` |
+| API PTAX (Brasil)               | `src/sources/brl.ts` |
+| Caché / stale-while-error       | `src/cache.ts`       |
+| Reintentos / TLS / headers      | `src/http.ts`        |
+| Formatos de fecha (gotcha Mayo) | `src/format.ts`      |
+| CLI (comandos y flags)          | `src/cli.ts`         |
+| Tools MCP (esquemas zod)        | `src/mcp-server.ts`  |
+| Punto de entrada del binario    | `bin/mcp.js`         |
 
 ## Reglas de publicación
 
