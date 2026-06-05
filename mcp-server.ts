@@ -1,14 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import {
-    getBcvRates,
-    getBcvHistory,
-    getTrmRates,
-    getBrlRates,
-    Currency,
-    RequestOptions,
-} from './index';
+import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency, RequestOptions } from './index';
 
 const SERVER_NAME = 'bcv-exchange-rate';
 const SERVER_VERSION = '1.1.0';
@@ -85,7 +78,12 @@ export function createServer(): McpServer {
                     .describe('Códigos de moneda a incluir. Default: todas (USD, EUR, CNY, TRY, RUB).'),
                 includeCurrent: z.boolean().optional().describe('Incluir tasas actuales. Default: true.'),
                 includeHistory: z.boolean().optional().describe('Incluir histórico bancario. Default: true.'),
-                days: z.number().int().min(1).optional().describe('Ventana de días del histórico. Default: 7.'),
+                days: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .optional()
+                    .describe('Ventana de días del histórico. Default: 7.'),
                 page: z.number().int().min(0).optional().describe('Página del histórico. Default: 0.'),
                 ...bcvSslShape,
                 ...sharedOptionsShape,
@@ -153,7 +151,12 @@ export function createServer(): McpServer {
                     .max(1000)
                     .optional()
                     .describe('Máximo de registros (1-1000). Default: 10.'),
-                offset: z.number().int().min(0).optional().describe('Desplazamiento de paginación. Default: 0.'),
+                offset: z
+                    .number()
+                    .int()
+                    .min(0)
+                    .optional()
+                    .describe('Desplazamiento de paginación. Default: 0.'),
                 ...sharedOptionsShape,
             },
         },

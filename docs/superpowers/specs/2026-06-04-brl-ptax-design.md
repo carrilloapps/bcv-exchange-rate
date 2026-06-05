@@ -33,28 +33,28 @@ El cambio es exclusivamente aditivo:
 ```ts
 /** Parámetros para la tasa PTAX de Brasil. */
 export interface BrlParams extends RequestOptions {
-    /** Ventana de días hacia atrás desde hoy. Debe ser >= 1. Default: 7. */
-    days?: number;
+  /** Ventana de días hacia atrás desde hoy. Debe ser >= 1. Default: 7. */
+  days?: number;
 }
 
 /** Una cotización PTAX (BRL por USD). */
 export interface BrlRate {
-    /** cotacaoCompra. */
-    buy: number;
-    /** cotacaoVenda. */
-    sell: number;
-    /** dataHoraCotacao tal como la entrega la API (`YYYY-MM-DD HH:mm:ss.SSS`). */
-    dateTime: string;
+  /** cotacaoCompra. */
+  buy: number;
+  /** cotacaoVenda. */
+  sell: number;
+  /** dataHoraCotacao tal como la entrega la API (`YYYY-MM-DD HH:mm:ss.SSS`). */
+  dateTime: string;
 }
 
 /** Respuesta estructurada para Brasil (PTAX). */
 export interface BrlResponse {
-    /** Cotización más reciente del período. */
-    current: BrlRate;
-    /** Resto del período, orden descendente por fecha/hora. */
-    history: BrlRate[];
-    /** Rango consultado en ISO 8601 (YYYY-MM-DD) y total de registros. */
-    range: { startDate: string; endDate: string; count: number };
+  /** Cotización más reciente del período. */
+  current: BrlRate;
+  /** Resto del período, orden descendente por fecha/hora. */
+  history: BrlRate[];
+  /** Rango consultado en ISO 8601 (YYYY-MM-DD) y total de registros. */
+  range: { startDate: string; endDate: string; count: number };
 }
 
 /** Lanzada exclusivamente por `getBrlRates` cuando la API del BCB falla. */
@@ -81,11 +81,11 @@ export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse |
 
 ## Errores
 
-| Condición | Resultado |
-| --- | --- |
-| `days` inválido | `ValidationError` |
-| Red/timeout/5xx tras reintentos | `BrlApiError` (causa adjunta) |
-| API OK sin registros | `null` + `logger.warn` |
+| Condición                               | Resultado                                             |
+| --------------------------------------- | ----------------------------------------------------- |
+| `days` inválido                         | `ValidationError`                                     |
+| Red/timeout/5xx tras reintentos         | `BrlApiError` (causa adjunta)                         |
+| API OK sin registros                    | `null` + `logger.warn`                                |
 | Caché con stale válido y upstream caído | valor stale + `logger.warn` (heredado de `withCache`) |
 
 ## Tests (index.spec.ts, axios-mock-adapter, mismo estilo)

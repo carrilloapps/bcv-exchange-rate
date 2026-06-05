@@ -110,52 +110,52 @@ claude mcp add bcv-exchange-rate -- npx bcv-exchange-rate
 
 Tasas de cambio oficiales del Banco Central de Venezuela (VES por unidad de divisa) y, opcionalmente, el histórico informativo del sistema bancario.
 
-| Atributo | Tipo | Default | Descripción |
-| --- | --- | --- | --- |
-| `currencies` | `("USD" \| "EUR" \| "CNY" \| "TRY" \| "RUB")[]` | todas | Códigos de moneda a incluir. |
-| `includeCurrent` | `boolean` | `true` | Incluir las tasas actuales de la portada del BCV. |
-| `includeHistory` | `boolean` | `true` | Incluir el histórico bancario. |
-| `days` | `integer ≥ 1` | `7` | Ventana de días del histórico. |
-| `page` | `integer ≥ 0` | `0` | Página del histórico. |
-| `strictSSL` | `boolean` | `false` | Validación TLS. El portal del BCV sirve una cadena de certificados incompleta, por lo que el servidor MCP la desactiva por defecto (la librería mantiene `true`). |
-| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
-| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
-| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+| Atributo         | Tipo                                            | Default | Descripción                                                                                                                                                       |
+| ---------------- | ----------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `currencies`     | `("USD" \| "EUR" \| "CNY" \| "TRY" \| "RUB")[]` | todas   | Códigos de moneda a incluir.                                                                                                                                      |
+| `includeCurrent` | `boolean`                                       | `true`  | Incluir las tasas actuales de la portada del BCV.                                                                                                                 |
+| `includeHistory` | `boolean`                                       | `true`  | Incluir el histórico bancario.                                                                                                                                    |
+| `days`           | `integer ≥ 1`                                   | `7`     | Ventana de días del histórico.                                                                                                                                    |
+| `page`           | `integer ≥ 0`                                   | `0`     | Página del histórico.                                                                                                                                             |
+| `strictSSL`      | `boolean`                                       | `false` | Validación TLS. El portal del BCV sirve una cadena de certificados incompleta, por lo que el servidor MCP la desactiva por defecto (la librería mantiene `true`). |
+| `timeout`        | `integer ≥ 1`                                   | `25000` | Timeout de la petición en ms.                                                                                                                                     |
+| `retries`        | `integer ≥ 0`                                   | `2`     | Reintentos ante fallos transitorios.                                                                                                                              |
+| `cacheTtlMs`     | `integer ≥ 0`                                   | `60000` | TTL de caché fresca en ms; `0` desactiva la caché.                                                                                                                |
 
 #### `get_bcv_history` — Histórico bancario BCV (Venezuela)
 
 Solo las tasas informativas históricas del sistema bancario venezolano (compra/venta por banco y fecha).
 
-| Atributo | Tipo | Default | Descripción |
-| --- | --- | --- | --- |
-| `days` | `integer ≥ 1` | `7` | Ventana de días hacia atrás. |
-| `page` | `integer ≥ 0` | `0` | Página del listado. |
-| `strictSSL` | `boolean` | `false` | Validación TLS (ver nota en `get_bcv_rates`). |
-| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
-| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| Atributo     | Tipo          | Default | Descripción                                        |
+| ------------ | ------------- | ------- | -------------------------------------------------- |
+| `days`       | `integer ≥ 1` | `7`     | Ventana de días hacia atrás.                       |
+| `page`       | `integer ≥ 0` | `0`     | Página del listado.                                |
+| `strictSSL`  | `boolean`     | `false` | Validación TLS (ver nota en `get_bcv_rates`).      |
+| `timeout`    | `integer ≥ 1` | `25000` | Timeout de la petición en ms.                      |
+| `retries`    | `integer ≥ 0` | `2`     | Reintentos ante fallos transitorios.               |
 | `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 #### `get_trm_rates` — TRM oficial (Colombia)
 
 Tasa Representativa del Mercado (COP por USD) desde el portal de datos abiertos del Gobierno de Colombia (datos.gov.co).
 
-| Atributo | Tipo | Default | Descripción |
-| --- | --- | --- | --- |
-| `limit` | `integer 1-1000` | `10` | Máximo de registros a devolver. |
-| `offset` | `integer ≥ 0` | `0` | Desplazamiento de paginación. |
-| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
-| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
-| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+| Atributo     | Tipo             | Default | Descripción                                        |
+| ------------ | ---------------- | ------- | -------------------------------------------------- |
+| `limit`      | `integer 1-1000` | `10`    | Máximo de registros a devolver.                    |
+| `offset`     | `integer ≥ 0`    | `0`     | Desplazamiento de paginación.                      |
+| `timeout`    | `integer ≥ 1`    | `25000` | Timeout de la petición en ms.                      |
+| `retries`    | `integer ≥ 0`    | `2`     | Reintentos ante fallos transitorios.               |
+| `cacheTtlMs` | `integer ≥ 0`    | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 #### `get_brl_rates` — Dólar PTAX oficial (Brasil)
 
 Cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos abiertos del Banco Central do Brasil. Devuelve `null` cuando la ventana no contiene cotizaciones (fines de semana o feriados).
 
-| Atributo | Tipo | Default | Descripción |
-| --- | --- | --- | --- |
-| `days` | `integer ≥ 1` | `7` | Ventana de días hacia atrás. |
-| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
-| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| Atributo     | Tipo          | Default | Descripción                                        |
+| ------------ | ------------- | ------- | -------------------------------------------------- |
+| `days`       | `integer ≥ 1` | `7`     | Ventana de días hacia atrás.                       |
+| `timeout`    | `integer ≥ 1` | `25000` | Timeout de la petición en ms.                      |
+| `retries`    | `integer ≥ 0` | `2`     | Reintentos ante fallos transitorios.               |
 | `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 Todas las tools devuelven el resultado como JSON en el contenido de texto de la respuesta. Los errores de la librería (red, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.

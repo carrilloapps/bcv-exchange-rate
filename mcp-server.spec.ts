@@ -42,7 +42,9 @@ describe('mcp-server', () => {
     it('declares the documented input attributes per tool', async () => {
         const { tools } = await client.listTools();
         const schemaOf = (name: string) =>
-            Object.keys((tools.find((t) => t.name === name)?.inputSchema as { properties?: object }).properties ?? {});
+            Object.keys(
+                (tools.find((t) => t.name === name)?.inputSchema as { properties?: object }).properties ?? {}
+            );
 
         expect(schemaOf('get_bcv_rates')).toEqual(
             expect.arrayContaining([
@@ -96,7 +98,9 @@ describe('mcp-server', () => {
     });
 
     it('get_trm_rates returns the Colombian TRM as JSON', async () => {
-        mock.onGet(/datos.gov.co/).reply(200, [{ valor: '3573.30', unidad: 'COP', vigenciahasta: '2026-04-21' }]);
+        mock.onGet(/datos.gov.co/).reply(200, [
+            { valor: '3573.30', unidad: 'COP', vigenciahasta: '2026-04-21' },
+        ]);
         const result = (await client.callTool({ name: 'get_trm_rates', arguments: {} })) as ToolTextResult;
         expect(result.isError).toBeFalsy();
         const payload = JSON.parse(result.content[0].text);
@@ -105,9 +109,14 @@ describe('mcp-server', () => {
 
     it('get_brl_rates returns the PTAX quotation as JSON', async () => {
         mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
-            value: [{ cotacaoCompra: 5.0409, cotacaoVenda: 5.0415, dataHoraCotacao: '2026-06-03 13:06:26.54' }],
+            value: [
+                { cotacaoCompra: 5.0409, cotacaoVenda: 5.0415, dataHoraCotacao: '2026-06-03 13:06:26.54' },
+            ],
         });
-        const result = (await client.callTool({ name: 'get_brl_rates', arguments: { days: 7 } })) as ToolTextResult;
+        const result = (await client.callTool({
+            name: 'get_brl_rates',
+            arguments: { days: 7 },
+        })) as ToolTextResult;
         expect(result.isError).toBeFalsy();
         const payload = JSON.parse(result.content[0].text);
         expect(payload.current).toEqual({ buy: 5.0409, sell: 5.0415, dateTime: '2026-06-03 13:06:26.54' });

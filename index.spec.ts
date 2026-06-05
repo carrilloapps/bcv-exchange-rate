@@ -577,8 +577,16 @@ describe('bcv-exchange-rate', () => {
         it('parses a successful response', async () => {
             mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
                 value: [
-                    { cotacaoCompra: 5.0409, cotacaoVenda: 5.0415, dataHoraCotacao: '2026-06-03 13:06:26.54' },
-                    { cotacaoCompra: 5.0154, cotacaoVenda: 5.016, dataHoraCotacao: '2026-06-02 13:10:30.711' },
+                    {
+                        cotacaoCompra: 5.0409,
+                        cotacaoVenda: 5.0415,
+                        dataHoraCotacao: '2026-06-03 13:06:26.54',
+                    },
+                    {
+                        cotacaoCompra: 5.0154,
+                        cotacaoVenda: 5.016,
+                        dataHoraCotacao: '2026-06-02 13:10:30.711',
+                    },
                 ],
             });
             const result = await getBrlRates();
@@ -626,7 +634,9 @@ describe('bcv-exchange-rate', () => {
         it('reuses cached responses within the TTL', async () => {
             mock.onGet(/olinda\.bcb\.gov\.br/)
                 .replyOnce(200, {
-                    value: [{ cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-03 13:00:00.0' }],
+                    value: [
+                        { cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-03 13:00:00.0' },
+                    ],
                 })
                 .onGet(/olinda\.bcb\.gov\.br/)
                 .reply(500);
