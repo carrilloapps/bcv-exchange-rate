@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency, RequestOptions } from './index';
 
 const SERVER_NAME = 'bcv-exchange-rate';
-const SERVER_VERSION = '1.3.0';
+const SERVER_VERSION = '2.0.0';
 
 const CURRENCY_CODES = ['USD', 'EUR', 'CNY', 'TRY', 'RUB'] as const;
 
@@ -157,12 +157,18 @@ export function createServer(): McpServer {
                     .min(0)
                     .optional()
                     .describe('Desplazamiento de paginación. Default: 0.'),
+                days: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .optional()
+                    .describe('Ventana de días hacia atrás. Default: sin filtro de fecha.'),
                 ...sharedOptionsShape,
             },
         },
-        async ({ limit, offset, ...shared }) => {
+        async ({ limit, offset, days, ...shared }) => {
             try {
-                const result = await getTrmRates({ ...toRequestOptions(shared), limit, offset });
+                const result = await getTrmRates({ ...toRequestOptions(shared), limit, offset, days });
                 return jsonResult(result);
             } catch (error) {
                 return errorResult(error);

@@ -4,6 +4,32 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [2.0.0] - 2026-06-05
+
+### Cambiado (BREAKING)
+
+Contrato de respuesta unificado: las tres fuentes comparten ahora el mismo esqueleto de salida con un bloque `pagination` idéntico (`{ limit, offset, page, count, hasMore }`, con `null` en los campos que no aplican a la fuente) y un bloque `range` (`{ startDate, endDate } | null`) con la ventana de días aplicada.
+
+Guía de migración 1.x → 2.0:
+
+- **`BcvResponse.pagination`**: `{ currentPage, hasNextPage }` → `{ limit: null, offset: null, page, count, hasMore }`. Renombra `currentPage` → `page` y `hasNextPage` → `hasMore`.
+- **`TrmResponse.pagination`**: gana `page: null` y `hasMore: null` (los campos existentes `limit`/`offset`/`count` no cambian).
+- **`BrlResponse.range`**: pierde `count` (vive únicamente en `pagination.count`).
+- **`BrlResponse.pagination`**: gana `page: null` y `hasMore: null`.
+- Nuevos tipos exportados `Pagination` y `DateRange`.
+- Sin cambios en: nombres de funciones, parámetros existentes, formas de `current` e ítems de `history`, jerarquía de errores, caché y reintentos.
+
+### Añadido
+
+- **`days` en `getTrmRates`**: ventana de días hacia atrás vía `$where vigenciahasta >=` (sin default: el comportamiento previo se mantiene si no se pasa). Disponible también como `--days` en la CLI y atributo `days` en la tool MCP `get_trm_rates`.
+- **`range` en las tres respuestas**: ventana de fechas aplicada en ISO 8601 (`null` cuando no aplica).
+- **`pagination.count` y `pagination.hasMore` en BCV**: total de filas devueltas y si el portal reporta más páginas.
+
+### Interno
+
+- **Arquitectura modular**: el código fuente pasa de un único `index.ts` a módulos por responsabilidad bajo `src/` (`types`, `errors`, `validation`, `format`, `logger`, `cache`, `http` y `sources/{bcv,trm,brl}`), con la CLI y el servidor MCP como puntos de entrada separados. La API pública no cambia por esta reorganización (la describe la sección _breaking_ de arriba).
+- Documentación extendida (`docs/`) actualizada por completo: referencia de API con el contrato unificado, arquitectura con la estructura de módulos y nuevos ejemplos de PTAX y CLI/MCP.
+
 ## [1.3.0] - 2026-06-05
 
 ### Añadido

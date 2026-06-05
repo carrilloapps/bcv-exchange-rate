@@ -4,8 +4,9 @@
     "module": "ES2022",
     "target": "ES2022",
     "moduleResolution": "node10",
+    "rootDir": "./src",
     "outDir": "./dist/esm",
     "declaration": false
   },
-  "include": ["index.ts"]
+  "include": ["src/index.ts"]
 }

@@ -32,5 +32,5 @@ Salida:
 ```json
 {"level":"info","message":"Starting BCV extraction","service":"bcv-integration","timestamp":"2026-04-21T14:32:01.234Z","days":7,"page":0,"includeCurrent":true,"includeHistory":true}
 {"level":"debug","message":"HTTP request","service":"bcv-integration","timestamp":"2026-04-21T14:32:01.245Z","url":"https://www.bcv.org.ve/","attempt":0}
-{"level":"info","message":"BCV history retrieved","service":"bcv-integration","timestamp":"2026-04-21T14:32:02.891Z","count":12,"hasNextPage":false}
+{"level":"info","message":"BCV history retrieved","service":"bcv-integration","timestamp":"2026-04-21T14:32:02.891Z","count":12,"hasMore":false}
 ```

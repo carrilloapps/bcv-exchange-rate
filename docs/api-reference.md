@@ -8,15 +8,22 @@ Documentación exhaustiva de los símbolos exportados por `bcv-exchange-rate`.
   - [`getBcvRates`](#getbcvrates)
   - [`getBcvHistory`](#getbcvhistory)
   - [`getTrmRates`](#gettrmrates)
+  - [`getBrlRates`](#getbrlrates)
   - [API de caché](#api-de-caché)
 - [Interfaces de entrada](#interfaces-de-entrada)
   - [`RequestOptions`](#requestoptions)
   - [`BcvParams`](#bcvparams)
   - [`TrmParams`](#trmparams)
+  - [`BrlParams`](#brlparams)
+- [Contrato de respuesta unificado](#contrato-de-respuesta-unificado)
+  - [`Pagination`](#pagination)
+  - [`DateRange`](#daterange)
 - [Interfaces de respuesta](#interfaces-de-respuesta)
   - [`BcvResponse`](#bcvresponse)
   - [`BcvBankRate`](#bcvbankrate)
   - [`TrmResponse`](#trmresponse)
+  - [`BrlResponse`](#brlresponse)
+  - [`BrlRate`](#brlrate)
 - [Interfaces de caché](#interfaces-de-caché)
   - [`CacheEntry`](#cacheentry)
   - [`CacheStore`](#cachestore)
@@ -72,7 +79,7 @@ if (result.status.current === 'failed') {
 ### `getBcvHistory`
 
 ```typescript
-function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination'>>;
+function getBcvHistory(params?: BcvParams): Promise<Pick<BcvResponse, 'history' | 'pagination' | 'range'>>;
 ```
 
 Obtiene únicamente el historial bancario. Es útil para reportes o auditorías que no necesitan la portada.
@@ -85,7 +92,10 @@ Obtiene únicamente el historial bancario. Es útil para reportes o auditorías 
 **Ejemplo:**
 
 ```typescript
-const { history, pagination } = await getBcvHistory({ days: 30, page: 2 });
+const { history, pagination, range } = await getBcvHistory({ days: 30, page: 2 });
+if (pagination.hasMore) {
+  // hay más páginas en el portal
+}
 ```
 
 ---
@@ -102,15 +112,43 @@ Consulta la Tasa Representativa del Mercado de Colombia publicada por la Superin
 
 **Lanza:**
 
-- `ValidationError`: `limit` fuera del rango `[1, 1000]` o `offset < 0`.
+- `ValidationError`: `limit` fuera del rango `[1, 1000]`, `offset < 0` o `days < 1`.
 - `TrmApiError`: el endpoint respondió con error o falló la red.
 
 **Ejemplo:**
 
 ```typescript
-const trm = await getTrmRates({ limit: 30 });
+const trm = await getTrmRates({ limit: 30, days: 60 });
 if (trm) {
-  console.log(`TRM actual: ${trm.current.value} COP`);
+  console.log(
+    `TRM actual: ${trm.current.value} COP (ventana ${trm.range?.startDate} → ${trm.range?.endDate})`
+  );
+}
+```
+
+---
+
+### `getBrlRates`
+
+```typescript
+function getBrlRates(params?: BrlParams): Promise<BrlResponse | null>;
+```
+
+Consulta la cotización oficial USD/BRL (dólar PTAX, compra y venta) publicada por el Banco Central do Brasil en su API de datos abiertos (Olinda/OData).
+
+**Devuelve:** `null` cuando la ventana consultada no contiene cotizaciones (por ejemplo, si solo abarca fines de semana o feriados, días en los que no se publica PTAX).
+
+**Lanza:**
+
+- `ValidationError`: `days < 1`, `limit` fuera del rango `[1, 1000]` u `offset < 0`.
+- `BrlApiError`: el endpoint respondió con error o falló la red.
+
+**Ejemplo:**
+
+```typescript
+const brl = await getBrlRates({ days: 30, limit: 5, offset: 5 });
+if (brl) {
+  console.log(`PTAX venta: ${brl.current.sell} BRL por USD (${brl.current.dateTime})`);
 }
 ```
 
@@ -176,10 +214,56 @@ Extiende [`RequestOptions`](#requestoptions).
 
 Extiende [`RequestOptions`](#requestoptions).
 
-| Propiedad | Tipo     | Default | Descripción                              |
-| --------- | -------- | ------- | ---------------------------------------- |
-| `limit`   | `number` | `10`    | Registros a devolver. Rango `[1, 1000]`. |
-| `offset`  | `number` | `0`     | Desplazamiento para paginar.             |
+| Propiedad | Tipo     | Default    | Descripción                                                        |
+| --------- | -------- | ---------- | ------------------------------------------------------------------ |
+| `limit`   | `number` | `10`       | Registros a devolver. Rango `[1, 1000]`.                           |
+| `offset`  | `number` | `0`        | Desplazamiento para paginar.                                       |
+| `days`    | `number` | Sin filtro | Ventana en días (≥ 1) hacia atrás (`vigenciahasta >= hoy - días`). |
+
+### `BrlParams`
+
+Extiende [`RequestOptions`](#requestoptions).
+
+| Propiedad | Tipo     | Default         | Descripción                                             |
+| --------- | -------- | --------------- | ------------------------------------------------------- |
+| `days`    | `number` | `7`             | Ventana en días (≥ 1) hacia atrás desde hoy.            |
+| `limit`   | `number` | Toda la ventana | Registros a devolver (OData `$top`). Rango `[1, 1000]`. |
+| `offset`  | `number` | `0`             | Registros a saltar (OData `$skip`).                     |
+
+---
+
+## Contrato de respuesta unificado
+
+Desde la versión 2.0, las tres fuentes comparten el mismo esqueleto de salida: `current` + `history` + [`pagination`](#pagination) + [`range`](#daterange). Los campos que no aplican al paradigma de una fuente son `null`, nunca se omiten, de modo que el shape es idéntico y predecible.
+
+### `Pagination`
+
+```typescript
+interface Pagination {
+  limit: number | null; // null: no solicitado, o la fuente pagina por página (BCV)
+  offset: number | null; // null: la fuente pagina por página (BCV)
+  page: number | null; // null: la fuente pagina por limit/offset (TRM, BRL)
+  count: number; // registros devueltos en esta respuesta
+  hasMore: boolean | null; // null: la fuente no puede saberlo (TRM, BRL)
+}
+```
+
+| Campo            | BCV                     | TRM    | BRL                                   |
+| ---------------- | ----------------------- | ------ | ------------------------------------- |
+| `limit`/`offset` | `null` (usa `page`)     | reales | reales (`limit: null` si no se pidió) |
+| `page`           | real                    | `null` | `null`                                |
+| `hasMore`        | real (pager del portal) | `null` | `null`                                |
+
+### `DateRange`
+
+```typescript
+interface DateRange {
+  startDate: string; // ISO 8601 (YYYY-MM-DD)
+  endDate: string;
+}
+```
+
+Ventana de días aplicada a la consulta. Es `null` cuando no se aplicó ventana: TRM sin `days`, o BCV con el histórico omitido o fallido.
 
 ---
 
@@ -192,10 +276,8 @@ interface BcvResponse {
   current: Partial<Record<Currency, number>>;
   effectiveDate: string;
   history: BcvBankRate[];
-  pagination: {
-    currentPage: number;
-    hasNextPage: boolean;
-  };
+  pagination: Pagination;
+  range: DateRange | null;
   status: {
     current: SectionStatus;
     history: SectionStatus;
@@ -233,11 +315,29 @@ interface TrmResponse {
     value: number;
     validityDate: string;
   }>;
-  pagination: {
-    limit: number;
-    offset: number;
-    count: number;
-  };
+  pagination: Pagination;
+  range: DateRange | null; // null cuando no se pasó days
+}
+```
+
+### `BrlResponse`
+
+```typescript
+interface BrlResponse {
+  current: BrlRate;
+  history: BrlRate[];
+  pagination: Pagination; // limit null cuando se devolvió la ventana completa
+  range: DateRange | null;
+}
+```
+
+### `BrlRate`
+
+```typescript
+interface BrlRate {
+  buy: number; // cotacaoCompra (BRL por USD)
+  sell: number; // cotacaoVenda
+  dateTime: string; // dataHoraCotacao (YYYY-MM-DD HH:mm:ss.SSS)
 }
 ```
 
@@ -338,12 +438,16 @@ classDiagram
     class TrmApiError {
         Fallo específico de la API de Colombia
     }
+    class BrlApiError {
+        Fallo específico de la API de Brasil
+    }
 
     Error <|-- BcvExchangeError
     BcvExchangeError <|-- NetworkError
     BcvExchangeError <|-- ParseError
     BcvExchangeError <|-- ValidationError
     BcvExchangeError <|-- TrmApiError
+    BcvExchangeError <|-- BrlApiError
 ```
 
 Detalles y patrones de captura en la [guía de manejo de errores](./guides/errors.md).

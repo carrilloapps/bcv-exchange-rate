@@ -57,7 +57,14 @@ describe('bcv-exchange-rate', () => {
             expect(result.effectiveDate).toBe('2026-04-21T00:00:00');
             expect(result.history).toHaveLength(1);
             expect(result.history[0].date).toBe('2026-04-20');
-            expect(result.pagination.hasNextPage).toBe(true);
+            expect(result.pagination).toEqual({
+                limit: null,
+                offset: null,
+                page: 1,
+                count: 1,
+                hasMore: true,
+            });
+            expect(result.range?.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
             expect(result.status).toEqual({ current: 'ok', history: 'ok' });
         });
 
@@ -327,7 +334,12 @@ describe('bcv-exchange-rate', () => {
                     '<ul class="pagination"><li class="active"><span>1</span></li><li class="next"><a href="?page=1">siguiente</a></li></ul>'
             );
             const result = await getBcvHistory();
-            expect(result.pagination.hasNextPage).toBe(true);
+            expect(result.pagination.hasMore).toBe(true);
+            expect(result.pagination.page).toBe(0);
+            expect(result.range).toEqual({
+                startDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+                endDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+            });
         });
     });
 
@@ -571,6 +583,34 @@ describe('bcv-exchange-rate', () => {
             await expect(getTrmRates({ limit: 1001 })).rejects.toBeInstanceOf(ValidationError);
             await expect(getTrmRates({ offset: -1 })).rejects.toBeInstanceOf(ValidationError);
         });
+
+        it('validates days', async () => {
+            await expect(getTrmRates({ days: 0 })).rejects.toBeInstanceOf(ValidationError);
+        });
+
+        it('returns the unified pagination shape with a null range by default', async () => {
+            mock.onGet(/datos.gov.co/).reply(200, [
+                { valor: '3565.32', unidad: 'COP', vigenciahasta: '2026-06-05' },
+            ]);
+            const result = await getTrmRates({ limit: 1 });
+            const url = mock.history.get[mock.history.get.length - 1].url ?? '';
+            expect(url).not.toContain('$where');
+            expect(result?.pagination).toEqual({ limit: 1, offset: 0, page: null, count: 1, hasMore: null });
+            expect(result?.range).toBeNull();
+        });
+
+        it('filters by a date window when days is provided', async () => {
+            mock.onGet(/datos.gov.co/).reply(200, [
+                { valor: '3565.32', unidad: 'COP', vigenciahasta: '2026-06-05' },
+            ]);
+            const result = await getTrmRates({ days: 7 });
+            const url = mock.history.get[mock.history.get.length - 1].url ?? '';
+            expect(decodeURIComponent(url)).toMatch(/\$where=vigenciahasta >= '\d{4}-\d{2}-\d{2}'/);
+            expect(result?.range).toEqual({
+                startDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+                endDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+            });
+        });
     });
 
     describe('getBrlRates', () => {
@@ -597,9 +637,9 @@ describe('bcv-exchange-rate', () => {
             });
             expect(result?.history).toHaveLength(1);
             expect(result?.history[0].sell).toBe(5.016);
-            expect(result?.range.count).toBe(2);
-            expect(result?.range.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-            expect(result?.range.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(result?.pagination.count).toBe(2);
+            expect(result?.range?.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(result?.range?.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
         });
 
         it('requests the PTAX period endpoint with MM-DD-YYYY dates', async () => {
@@ -645,7 +685,13 @@ describe('bcv-exchange-rate', () => {
             const url = mock.history.get[mock.history.get.length - 1].url ?? '';
             expect(url).not.toContain('$top');
             expect(url).not.toContain('$skip');
-            expect(result?.pagination).toEqual({ limit: null, offset: 0, count: 1 });
+            expect(result?.pagination).toEqual({
+                limit: null,
+                offset: 0,
+                page: null,
+                count: 1,
+                hasMore: null,
+            });
         });
 
         it('paginates with $top/$skip when limit and offset are provided', async () => {
@@ -656,7 +702,7 @@ describe('bcv-exchange-rate', () => {
             const url = mock.history.get[mock.history.get.length - 1].url ?? '';
             expect(url).toContain('$top=1');
             expect(url).toContain('$skip=2');
-            expect(result?.pagination).toEqual({ limit: 1, offset: 2, count: 1 });
+            expect(result?.pagination).toEqual({ limit: 1, offset: 2, page: null, count: 1, hasMore: null });
         });
 
         it('reuses cached responses within the TTL', async () => {

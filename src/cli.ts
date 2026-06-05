@@ -1,6 +1,6 @@
 import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency } from './index';
 
-const VERSION = '1.3.0';
+const VERSION = '2.0.0';
 
 export const HELP = `bcv-exchange-rate v${VERSION} — tasas de cambio oficiales de Venezuela, Colombia y Brasil
 
@@ -31,6 +31,7 @@ Flags de history:
 Flags de trm:
   --limit N              Máximo de registros (1-1000). Default: 10.
   --offset N             Desplazamiento de paginación. Default: 0.
+  --days N               Ventana de días hacia atrás. Default: sin filtro de fecha.
 
 Flags de brl:
   --days N               Ventana de días hacia atrás. Default: 7.
@@ -185,7 +186,7 @@ export async function runCli(
                 strictSSL: flags['strict-ssl'] === true,
             });
         } else if (command === 'trm') {
-            result = await getTrmRates({ ...shared, limit, offset });
+            result = await getTrmRates({ ...shared, limit, offset, days });
         } else {
             result = await getBrlRates({ ...shared, days, limit, offset });
         }

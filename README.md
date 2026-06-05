@@ -160,13 +160,14 @@ Solo las tasas informativas históricas del sistema bancario venezolano (compra/
 
 Tasa Representativa del Mercado (COP por USD) desde el portal de datos abiertos del Gobierno de Colombia (datos.gov.co).
 
-| Atributo     | Tipo             | Default | Descripción                                        |
-| ------------ | ---------------- | ------- | -------------------------------------------------- |
-| `limit`      | `integer 1-1000` | `10`    | Máximo de registros a devolver.                    |
-| `offset`     | `integer ≥ 0`    | `0`     | Desplazamiento de paginación.                      |
-| `timeout`    | `integer ≥ 1`    | `25000` | Timeout de la petición en ms.                      |
-| `retries`    | `integer ≥ 0`    | `2`     | Reintentos ante fallos transitorios.               |
-| `cacheTtlMs` | `integer ≥ 0`    | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+| Atributo     | Tipo             | Default    | Descripción                                        |
+| ------------ | ---------------- | ---------- | -------------------------------------------------- |
+| `limit`      | `integer 1-1000` | `10`       | Máximo de registros a devolver.                    |
+| `offset`     | `integer ≥ 0`    | `0`        | Desplazamiento de paginación.                      |
+| `days`       | `integer ≥ 1`    | sin filtro | Ventana de días hacia atrás (`vigenciahasta >=`).  |
+| `timeout`    | `integer ≥ 1`    | `25000`    | Timeout de la petición en ms.                      |
+| `retries`    | `integer ≥ 0`    | `2`        | Reintentos ante fallos transitorios.               |
+| `cacheTtlMs` | `integer ≥ 0`    | `60000`    | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 #### `get_brl_rates` — Dólar PTAX oficial (Brasil)
 
@@ -182,6 +183,34 @@ Cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos 
 | `cacheTtlMs` | `integer ≥ 0`    | `60000`         | TTL de caché fresca en ms; `0` desactiva la caché. |
 
 Todas las tools devuelven el resultado como JSON en el contenido de texto de la respuesta. Los errores de la librería (red, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.
+
+## Estructura de respuesta unificada
+
+Las tres fuentes comparten el mismo esqueleto de salida. Los campos que no aplican al paradigma de una fuente son `null` (nunca se omiten), de modo que el shape es idéntico:
+
+```ts
+{
+  current:    ...,        // varía por fuente: multi-moneda (BCV), valor (TRM), compra/venta (BRL)
+  history:    [...],      // ítems propios de cada fuente
+  pagination: {
+    limit:   number | null,   // null: no solicitado, o la fuente pagina por página (BCV)
+    offset:  number | null,   // null: la fuente pagina por página (BCV)
+    page:    number | null,   // null: la fuente pagina por limit/offset (TRM, BRL)
+    count:   number,          // registros devueltos
+    hasMore: boolean | null   // null: la fuente no puede saberlo (TRM, BRL)
+  },
+  range: { startDate, endDate } | null   // ventana de días aplicada (ISO 8601)
+}
+```
+
+| Campo                         | BCV                     | TRM                                   | BRL                                   |
+| ----------------------------- | ----------------------- | ------------------------------------- | ------------------------------------- |
+| `pagination.limit` / `offset` | `null` (usa `page`)     | reales                                | reales (`limit: null` si no se pidió) |
+| `pagination.page`             | real                    | `null`                                | `null`                                |
+| `pagination.hasMore`          | real (pager del portal) | `null`                                | `null`                                |
+| `range`                       | ventana de `days`       | ventana de `days` o `null` sin filtro | ventana de `days`                     |
+
+`BcvResponse` añade además `effectiveDate` y `status` (fallos parciales por sección).
 
 ## Documentación
 

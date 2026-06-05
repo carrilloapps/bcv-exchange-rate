@@ -108,7 +108,13 @@ describe('cli', () => {
             });
             const { io, out } = makeIo();
             expect(await runCli(['brl', '--limit', '1', '--offset', '1'], io)).toBe(0);
-            expect(JSON.parse(out[0]).pagination).toEqual({ limit: 1, offset: 1, count: 1 });
+            expect(JSON.parse(out[0]).pagination).toEqual({
+                limit: 1,
+                offset: 1,
+                page: null,
+                count: 1,
+                hasMore: null,
+            });
         });
 
         it('runs the brl command', async () => {

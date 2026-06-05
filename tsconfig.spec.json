@@ -4,5 +4,5 @@
     "module": "node16",
     "moduleResolution": "node16"
   },
-  "include": ["index.ts", "index.spec.ts", "mcp-server.ts", "mcp-server.spec.ts", "cli.ts", "cli.spec.ts"]
+  "include": ["src"]
 }

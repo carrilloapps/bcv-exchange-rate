@@ -8,11 +8,12 @@ Bienvenido. Esta carpeta contiene la documentación extendida del paquete. El `R
 
 - [Guía de inicio](./getting-started.md): instalación, primer llamado y ejemplos mínimos.
 - [Ejemplos ejecutables](./examples/README.md): fragmentos copiables por caso de uso.
+- [CLI y servidor MCP](../README.md#cli): consulta desde la terminal con `npx`/`xrate` o desde clientes MCP (Claude, Cursor).
 
 ### Referencia
 
-- [Referencia de la API](./api-reference.md): todas las funciones, interfaces y tipos exportados.
-- [Arquitectura interna](./architecture.md): cómo funcionan el scraping, los reintentos y la caché por dentro.
+- [Referencia de la API](./api-reference.md): todas las funciones, interfaces, el contrato de respuesta unificado y los tipos exportados.
+- [Arquitectura interna](./architecture.md): estructura de módulos, scraping, reintentos y caché por dentro.
 
 ### Guías temáticas
 

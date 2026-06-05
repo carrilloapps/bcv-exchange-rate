@@ -14,6 +14,6 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["jest", "node"]
   },
-  "include": ["index.ts", "index.spec.ts"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

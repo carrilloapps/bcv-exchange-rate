@@ -3,7 +3,8 @@
   "compilerOptions": {
     "declaration": true,
     "emitDeclarationOnly": true,
+    "rootDir": "./src",
     "outDir": "./dist/types"
   },
-  "include": ["index.ts"]
+  "include": ["src/index.ts"]
 }

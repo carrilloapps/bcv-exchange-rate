@@ -19,7 +19,7 @@ export async function collectAllHistory(days: number): Promise<BcvBankRate[]> {
 
     all.push(...history);
 
-    if (!pagination.hasNextPage) break;
+    if (!pagination.hasMore) break;
     page += 1;
   }
 

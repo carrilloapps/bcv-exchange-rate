@@ -26,12 +26,16 @@ classDiagram
     class TrmApiError {
         Fallo específico de la API de Colombia
     }
+    class BrlApiError {
+        Fallo específico de la API de Brasil
+    }
 
     Error <|-- BcvExchangeError
     BcvExchangeError <|-- NetworkError
     BcvExchangeError <|-- ParseError
     BcvExchangeError <|-- ValidationError
     BcvExchangeError <|-- TrmApiError
+    BcvExchangeError <|-- BrlApiError
 ```
 
 Todas las clases exponen `cause`, que contiene el error original envuelto:
@@ -50,11 +54,12 @@ try {
 
 ## Qué lanza cada función
 
-| Función         | `ValidationError` | `NetworkError`           | `TrmApiError` | `ParseError` | Devuelve `null` |
-| --------------- | ----------------- | ------------------------ | ------------- | ------------ | --------------- |
-| `getBcvRates`   | sí                | sí (si sólo una sección) | no            | no           | no              |
-| `getBcvHistory` | sí                | sí                       | no            | no           | no              |
-| `getTrmRates`   | sí                | no                       | sí            | no           | sí (sin datos)  |
+| Función         | `ValidationError` | `NetworkError`           | `TrmApiError` | `BrlApiError` | `ParseError` | Devuelve `null` |
+| --------------- | ----------------- | ------------------------ | ------------- | ------------- | ------------ | --------------- |
+| `getBcvRates`   | sí                | sí (si sólo una sección) | no            | no            | no           | no              |
+| `getBcvHistory` | sí                | sí                       | no            | no            | no           | no              |
+| `getTrmRates`   | sí                | no                       | sí            | no            | no           | sí (sin datos)  |
+| `getBrlRates`   | sí                | no                       | no            | sí            | no           | sí (sin datos)  |
 
 ## Contrato asimétrico de `getBcvRates`
 
@@ -140,7 +145,7 @@ try {
 
 ## Reintentos integrados
 
-Tanto `NetworkError` como `TrmApiError` sólo se lanzan tras agotar los reintentos configurados. No hace falta implementar reintentos manuales en el consumidor, salvo que quieras _circuit breaking_ externo. Ajusta mediante `retries` y `retryDelayMs`:
+`NetworkError`, `TrmApiError` y `BrlApiError` sólo se lanzan tras agotar los reintentos configurados. No hace falta implementar reintentos manuales en el consumidor, salvo que quieras _circuit breaking_ externo. Ajusta mediante `retries` y `retryDelayMs`:
 
 ```typescript
 await getBcvHistory({ retries: 5, retryDelayMs: 1000 });
@@ -153,7 +158,7 @@ Detalles completos en la [guía de reintentos](./retries.md).
 
 La librería distingue tres formas de «no hay datos»:
 
-1. **`null`** (sólo en `getTrmRates`): la API respondió sin registros. No es un error.
+1. **`null`** (en `getTrmRates` y `getBrlRates`): la API respondió sin registros. No es un error.
 2. **`status: 'failed'`** (en `getBcvRates`): la sección se solicitó y falló, pero otra sección sí pudo servirse.
 3. **Excepción**: nada útil pudo recuperarse.
 

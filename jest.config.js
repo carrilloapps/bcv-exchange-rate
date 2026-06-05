@@ -6,7 +6,15 @@ module.exports = {
     },
     collectCoverage: true,
     coverageDirectory: 'coverage',
-    collectCoverageFrom: ['index.ts'],
+    collectCoverageFrom: [
+        'src/**/*.ts',
+        '!src/**/*.spec.ts',
+        // Pure re-export barrel: the transpiled CJS getters inflate the
+        // function count with no logic behind them.
+        '!src/index.ts',
+        '!src/cli.ts',
+        '!src/mcp-server.ts',
+    ],
     coverageThreshold: {
         global: {
             branches: 100,
