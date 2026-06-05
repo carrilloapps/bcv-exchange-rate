@@ -1,7 +1,7 @@
 {
   "name": "bcv-exchange-rate",
-  "version": "1.0.1",
-  "description": "Librería profesional de Node.js para el rastreo de indicadores económicos oficiales de Venezuela (BCV) y Colombia (TRM - COP). Especializada en monedas fronterizas.",
+  "version": "1.1.0",
+  "description": "Librería profesional de Node.js y servidor MCP para el rastreo de indicadores económicos oficiales de Venezuela (BCV), Colombia (TRM - COP) y Brasil (PTAX - BRL). Especializada en monedas fronterizas.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
@@ -13,8 +13,12 @@
     },
     "./package.json": "./package.json"
   },
+  "bin": {
+    "bcv-exchange-rate": "bin/mcp.js"
+  },
   "files": [
     "dist",
+    "bin",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -23,7 +27,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && npm run build:types && npm run build:esm:pkg",
+    "build": "npm run build:cjs && npm run build:esm && npm run build:types && npm run build:esm:pkg && npm run build:mcp",
+    "build:mcp": "tsc -p tsconfig.mcp.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:types": "tsc -p tsconfig.types.json",
@@ -52,7 +57,12 @@
     "exchange-rate",
     "indicadores",
     "economía",
-    "scraping"
+    "scraping",
+    "brasil",
+    "brl",
+    "ptax",
+    "mcp",
+    "model-context-protocol"
   ],
   "author": {
     "name": "José Carrillo",
@@ -75,8 +85,10 @@
     }
   ],
   "dependencies": {
+    "@modelcontextprotocol/sdk": "~1.29.0",
     "axios": "~1.15.0",
-    "cheerio": "~1.2.0"
+    "cheerio": "~1.2.0",
+    "zod": "~4.4.3"
   },
   "peerDependencies": {
     "winston": "~3.19.0"
@@ -93,11 +105,11 @@
     "axios-mock-adapter": "~2.1.0",
     "eslint": "~9.39.0",
     "eslint-config-prettier": "~9.1.0",
-    "typescript-eslint": "~8.59.0",
     "jest": "~30.3.0",
     "prettier": "~3.8.0",
     "rimraf": "~5.0.0",
     "ts-jest": "~29.4.0",
-    "typescript": "~6.0.0"
+    "typescript": "~6.0.0",
+    "typescript-eslint": "~8.59.0"
   }
 }

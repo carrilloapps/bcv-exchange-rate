@@ -41,6 +41,9 @@ export class ValidationError extends BcvExchangeError {}
 /** Raised exclusively by `getTrmRates` when the Colombia API responds with an error. */
 export class TrmApiError extends BcvExchangeError {}
 
+/** Raised exclusively by `getBrlRates` when the Banco Central do Brasil API responds with an error. */
+export class BrlApiError extends BcvExchangeError {}
+
 /** One entry inside a cache store. */
 export interface CacheEntry<T = unknown> {
     /** Cached value. */
@@ -182,7 +185,40 @@ export interface TrmResponse {
     pagination: { limit: number; offset: number; count: number };
 }
 
-const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+/** Parameters for the Brazil (PTAX) API. */
+export interface BrlParams extends RequestOptions {
+    /** Lookback window in days. Must be ≥ 1. Default: `7`. */
+    days?: number;
+}
+
+/** A single PTAX quotation (BRL per USD). */
+export interface BrlRate {
+    /** Buy rate (`cotacaoCompra`). */
+    buy: number;
+    /** Sell rate (`cotacaoVenda`). */
+    sell: number;
+    /** Quotation timestamp as provided by the API (`YYYY-MM-DD HH:mm:ss.SSS`). */
+    dateTime: string;
+}
+
+/** Structured response for Brazil (PTAX) indicators. */
+export interface BrlResponse {
+    /** Most recent quotation within the requested window. */
+    current: BrlRate;
+    /** Remaining quotations of the window, most recent first. */
+    history: BrlRate[];
+    /** Queried window in ISO 8601 (`YYYY-MM-DD`) plus total record count. */
+    range: { startDate: string; endDate: string; count: number };
+}
+
+/**
+ * Month tokens expected by the BCV (Drupal) date filter. They are Drupal's
+ * Spanish-translated abbreviations: every month is 3 letters except May,
+ * which Drupal translates as the full word "Mayo". Sending "May" (or full
+ * names like "Enero"/"Junio") makes the filter fail silently and the portal
+ * returns an empty result view.
+ */
+const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'Mayo', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const BCV_CURRENCY_MAP: Record<string, Currency> = {
     dolar: 'USD',
     euro: 'EUR',
@@ -508,7 +544,12 @@ export async function getBcvHistory(
     );
 
     const $ = cheerio.load(html);
-    const table = $('table.views-table');
+    // Prefer the main page view: the portal also renders a 3-column sidebar
+    // block (`view-tasas-sistema-bancario`) whose table matches the generic
+    // selector but carries no date column.
+    let table = $('.view-tasas-sistema-bancario-full table.views-table');
+    if (!table.length) table = $('table.views-table.cols-4');
+    if (!table.length) table = $('table.views-table');
     if (!table.length) {
         logger.warn('BCV history table selector did not match', { url });
     }
@@ -528,7 +569,9 @@ export async function getBcvHistory(
         });
     });
 
-    const hasNextPage = $('.pager-next').length > 0;
+    // The portal currently paginates with Bootstrap (`ul.pagination li.next`);
+    // `.pager-next` is kept for older Drupal pager markup.
+    const hasNextPage = $('ul.pagination li.next').length > 0 || $('.pager-next').length > 0;
     logger.info('BCV history retrieved', { count: history.length, hasNextPage });
 
     return { history, pagination: { currentPage: page, hasNextPage } };
@@ -581,5 +624,88 @@ export async function getTrmRates(params: TrmParams = {}): Promise<TrmResponse |
             validityDate: item.vigenciahasta,
         })),
         pagination: { limit, offset, count: payload.length },
+    };
+}
+
+/** Raw quotation record as returned by the PTAX OData API. */
+interface PtaxQuotation {
+    cotacaoCompra: number;
+    cotacaoVenda: number;
+    dataHoraCotacao: string;
+}
+
+/** Formats a date as `MM-DD-YYYY`, the format required by the PTAX OData API. */
+function formatPtaxDate(date: Date): string {
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${mm}-${dd}-${date.getFullYear()}`;
+}
+
+/** Formats a date as ISO 8601 (`YYYY-MM-DD`) using local time. */
+function formatIsoDate(date: Date): string {
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
+/**
+ * Fetches the official USD/BRL PTAX rate from the Banco Central do Brasil
+ * open-data API (Olinda/OData).
+ *
+ * @throws {ValidationError} On invalid input.
+ * @throws {BrlApiError} When the upstream API cannot be reached.
+ * @returns `null` when the window contains no quotations (e.g. it only spans
+ * weekends or holidays, days on which no PTAX is published).
+ */
+export async function getBrlRates(params: BrlParams = {}): Promise<BrlResponse | null> {
+    const logger = resolveLogger(params);
+    const days = params.days ?? 7;
+
+    assertPositiveInt(days, 'days', 1);
+
+    const config = buildAxiosConfig(params, logger);
+
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - days);
+
+    const url =
+        'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/' +
+        'CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)' +
+        `?@dataInicial='${formatPtaxDate(startDate)}'&@dataFinalCotacao='${formatPtaxDate(today)}'` +
+        '&$orderby=dataHoraCotacao%20desc&$format=json';
+
+    logger.info('Requesting Brazil PTAX', { days });
+
+    let payload: { value?: PtaxQuotation[] };
+    try {
+        payload = await withCache(`brl:${url}`, params, logger, () =>
+            requestWithRetry<{ value?: PtaxQuotation[] }>(url, config, params, logger)
+        );
+    } catch (error) {
+        throw new BrlApiError(`Failed to fetch PTAX: ${(error as Error).message}`, error);
+    }
+
+    const records = Array.isArray(payload?.value) ? payload.value : [];
+    if (records.length === 0) {
+        logger.warn('PTAX API returned no quotations');
+        return null;
+    }
+
+    const toRate = (item: PtaxQuotation): BrlRate => ({
+        buy: item.cotacaoCompra,
+        sell: item.cotacaoVenda,
+        dateTime: item.dataHoraCotacao,
+    });
+
+    const [latest, ...rest] = records;
+    return {
+        current: toRate(latest),
+        history: rest.map(toRate),
+        range: {
+            startDate: formatIsoDate(startDate),
+            endDate: formatIsoDate(today),
+            count: records.length,
+        },
     };
 }

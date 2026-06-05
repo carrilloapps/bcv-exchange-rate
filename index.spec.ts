@@ -3,6 +3,7 @@ import MockAdapter from 'axios-mock-adapter';
 import {
     getBcvRates,
     getTrmRates,
+    getBrlRates,
     getBcvHistory,
     clearCache,
     createInMemoryCache,
@@ -13,6 +14,7 @@ import {
     ValidationError,
     NetworkError,
     TrmApiError,
+    BrlApiError,
     BcvExchangeError,
     CacheStore,
 } from './index';
@@ -288,6 +290,45 @@ describe('bcv-exchange-rate', () => {
             const result = await getBcvHistory();
             expect(result.history[0].date).toBe('April 20, 2026');
         });
+
+        it('prefers the main page view table over the 3-column sidebar block', async () => {
+            mock.onGet(/tasas-informativas-sistema-bancario/).reply(
+                200,
+                '<div class="view view-tasas-sistema-bancario">' +
+                    '<table class="views-table cols-3"><tbody><tr><td>Banco Lateral</td><td>1,00</td><td>2,00</td></tr></tbody></table>' +
+                    '</div>' +
+                    '<div class="view view-tasas-sistema-bancario-full">' +
+                    '<table class="views-table cols-4"><tbody><tr><td>04-06-2026</td><td>Banesco</td><td>594,7146</td><td>625,7295</td></tr></tbody></table>' +
+                    '</div>'
+            );
+            const result = await getBcvHistory();
+            expect(result.history).toHaveLength(1);
+            expect(result.history[0]).toEqual({
+                date: '2026-06-04',
+                bank: 'Banesco',
+                buy: 594.7146,
+                sell: 625.7295,
+            });
+        });
+
+        it('falls back to the cols-4 table when the full view wrapper is absent', async () => {
+            mock.onGet(/tasas-informativas-sistema-bancario/).reply(
+                200,
+                '<table class="views-table cols-4"><tbody><tr><td>04-06-2026</td><td>B</td><td>1,00</td><td>2,00</td></tr></tbody></table>'
+            );
+            const result = await getBcvHistory();
+            expect(result.history).toHaveLength(1);
+        });
+
+        it('detects the next page through Bootstrap pagination markup', async () => {
+            mock.onGet(/tasas-informativas-sistema-bancario/).reply(
+                200,
+                '<table class="views-table"></table>' +
+                    '<ul class="pagination"><li class="active"><span>1</span></li><li class="next"><a href="?page=1">siguiente</a></li></ul>'
+            );
+            const result = await getBcvHistory();
+            expect(result.pagination.hasNextPage).toBe(true);
+        });
     });
 
     describe('caching', () => {
@@ -532,10 +573,75 @@ describe('bcv-exchange-rate', () => {
         });
     });
 
+    describe('getBrlRates', () => {
+        it('parses a successful response', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+                value: [
+                    { cotacaoCompra: 5.0409, cotacaoVenda: 5.0415, dataHoraCotacao: '2026-06-03 13:06:26.54' },
+                    { cotacaoCompra: 5.0154, cotacaoVenda: 5.016, dataHoraCotacao: '2026-06-02 13:10:30.711' },
+                ],
+            });
+            const result = await getBrlRates();
+            expect(result?.current).toEqual({
+                buy: 5.0409,
+                sell: 5.0415,
+                dateTime: '2026-06-03 13:06:26.54',
+            });
+            expect(result?.history).toHaveLength(1);
+            expect(result?.history[0].sell).toBe(5.016);
+            expect(result?.range.count).toBe(2);
+            expect(result?.range.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(result?.range.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        });
+
+        it('requests the PTAX period endpoint with MM-DD-YYYY dates', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, { value: [] });
+            await getBrlRates({ days: 7 });
+            const url = mock.history.get[mock.history.get.length - 1].url ?? '';
+            expect(url).toContain('CotacaoDolarPeriodo');
+            expect(url).toMatch(/@dataInicial='\d{2}-\d{2}-\d{4}'/);
+            expect(url).toMatch(/@dataFinalCotacao='\d{2}-\d{2}-\d{4}'/);
+        });
+
+        it('returns null when the window has no quotations', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, { value: [] });
+            expect(await getBrlRates()).toBeNull();
+        });
+
+        it('returns null when the payload has no value array', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, { error: 'bad payload' });
+            expect(await getBrlRates()).toBeNull();
+        });
+
+        it('throws BrlApiError on failure', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/).reply(500);
+            await expect(getBrlRates({ retries: 0 })).rejects.toBeInstanceOf(BrlApiError);
+        });
+
+        it('validates days', async () => {
+            await expect(getBrlRates({ days: 0 })).rejects.toBeInstanceOf(ValidationError);
+            await expect(getBrlRates({ days: 1.5 })).rejects.toBeInstanceOf(ValidationError);
+        });
+
+        it('reuses cached responses within the TTL', async () => {
+            mock.onGet(/olinda\.bcb\.gov\.br/)
+                .replyOnce(200, {
+                    value: [{ cotacaoCompra: 5.0, cotacaoVenda: 5.01, dataHoraCotacao: '2026-06-03 13:00:00.0' }],
+                })
+                .onGet(/olinda\.bcb\.gov\.br/)
+                .reply(500);
+            const first = await getBrlRates();
+            const second = await getBrlRates();
+            expect(second).toEqual(first);
+            expect(getCacheStats().hits).toBe(1);
+        });
+    });
+
     describe('error hierarchy', () => {
         it('exposes a shared base error class', () => {
             expect(new NetworkError('x')).toBeInstanceOf(BcvExchangeError);
             expect(new TrmApiError('x')).toBeInstanceOf(BcvExchangeError);
+            expect(new BrlApiError('x')).toBeInstanceOf(BcvExchangeError);
             expect(new ValidationError('x')).toBeInstanceOf(BcvExchangeError);
         });
     });

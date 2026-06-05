@@ -4,6 +4,21 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [1.1.0] - 2026-06-04
+
+### Añadido
+
+- **`getBrlRates(params)`**: cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos abiertos del Banco Central do Brasil, con ventana configurable en días (`days`), caché y reintentos heredados. Devuelve `null` cuando la ventana no contiene cotizaciones.
+- **Nuevos tipos**: `BrlParams`, `BrlRate`, `BrlResponse` y la clase de error `BrlApiError`.
+- **Servidor MCP integrado** ejecutable con `npx bcv-exchange-rate` (transporte stdio). Expone cuatro _tools_: `get_bcv_rates`, `get_bcv_history`, `get_trm_rates` y `get_brl_rates`, con esquemas tipados (zod) y manejo de errores que nunca tumba el proceso. En las tools del BCV, `strictSSL` es `false` por defecto debido a la cadena de certificados incompleta del portal (la librería mantiene su valor estricto).
+- Campo `bin` en `package.json` y dependencias `@modelcontextprotocol/sdk` y `zod`.
+
+### Arreglado
+
+- **Extracción del histórico BCV**: el filtro de fechas enviaba `May` como mes, pero el portal (Drupal en español) espera `Mayo`, lo que producía una vista vacía de forma silenciosa.
+- **Selector de tabla del histórico**: se prioriza la vista principal (`view-tasas-sistema-bancario-full`) para no confundirla con el bloque lateral de 3 columnas.
+- **Detección de paginación**: soporte para el marcado Bootstrap actual (`ul.pagination li.next`) además del antiguo `.pager-next`.
+
 ## [1.0.1] - 2026-04-21
 
 ### Cambiado

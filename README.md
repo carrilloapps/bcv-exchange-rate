@@ -8,17 +8,18 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-ready-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/node/v/bcv-exchange-rate.svg?logo=node.js&logoColor=white)](https://nodejs.org)
 
-Librería profesional de Node.js para consultar indicadores económicos oficiales de **Venezuela (BCV)** y **Colombia (TRM)**. Extrae los datos directamente del Banco Central de Venezuela y del portal de datos abiertos del Gobierno de Colombia, con tipado estricto, reintentos con backoff, caché en memoria activa por defecto, jerarquía de errores tipada y logger basado en interfaz, sin dependencias forzadas.
+Librería profesional de Node.js y **servidor MCP** para consultar indicadores económicos oficiales de **Venezuela (BCV)**, **Colombia (TRM)** y **Brasil (PTAX)**. Extrae los datos directamente del Banco Central de Venezuela, del portal de datos abiertos del Gobierno de Colombia y del Banco Central do Brasil, con tipado estricto, reintentos con backoff, caché en memoria activa por defecto, jerarquía de errores tipada y logger basado en interfaz, sin dependencias forzadas.
 
 ---
 
 ## Características
 
-- **Multi-indicador.** Tasas oficiales del BCV (`USD`, `EUR`, `CNY`, `TRY`, `RUB`) y TRM de Colombia (`COP`).
+- **Multi-indicador.** Tasas oficiales del BCV (`USD`, `EUR`, `CNY`, `TRY`, `RUB`), TRM de Colombia (`COP`) y dólar PTAX de Brasil (`BRL`).
+- **Servidor MCP integrado.** `npx bcv-exchange-rate` expone las cuatro fuentes como _tools_ del [Model Context Protocol](https://modelcontextprotocol.io) para Claude, Cursor y cualquier cliente MCP.
 - **Historial bancario paginado.** Tasas de compra y venta por institución financiera venezolana.
 - **Reintentos automáticos** con backoff exponencial configurable.
 - **Caché en memoria** con TTL por llamada y _stale-while-error_ opcional.
-- **Jerarquía de errores tipada** (`NetworkError`, `TrmApiError`, `ValidationError`).
+- **Jerarquía de errores tipada** (`NetworkError`, `TrmApiError`, `BrlApiError`, `ValidationError`).
 - **Logger basado en interfaz.** Compatible con winston, pino, bunyan o `console`, sin dependencias forzadas.
 - **TLS seguro por defecto** (`strictSSL: true`), con desactivación explícita cuando sea necesario.
 - **Dual CJS/ESM** con declaraciones `.d.ts`.
@@ -40,13 +41,16 @@ npm install winston
 ## Inicio rápido
 
 ```typescript
-import { getBcvRates, getTrmRates } from 'bcv-exchange-rate';
+import { getBcvRates, getTrmRates, getBrlRates } from 'bcv-exchange-rate';
 
 const bcv = await getBcvRates({ currencies: 'USD', includeHistory: false });
 console.log(`USD/VES: ${bcv.current.USD} (vigencia ${bcv.effectiveDate})`);
 
 const trm = await getTrmRates({ limit: 1 });
 console.log(`TRM: ${trm?.current.value} COP`);
+
+const brl = await getBrlRates({ days: 7 });
+console.log(`PTAX venta: ${brl?.current.sell} BRL por USD (${brl?.current.dateTime})`);
 ```
 
 Versión CommonJS:
@@ -70,6 +74,91 @@ if (bcv.status.current === 'failed') {
   console.warn('Tasa actual no disponible; se usa el historial como alternativa');
 }
 ```
+
+## Servidor MCP
+
+El paquete incluye un servidor [Model Context Protocol](https://modelcontextprotocol.io) por **stdio**, listo para usarse con `npx` sin instalación previa:
+
+```bash
+npx bcv-exchange-rate
+```
+
+### Configuración en clientes MCP
+
+**Claude Code:**
+
+```bash
+claude mcp add bcv-exchange-rate -- npx bcv-exchange-rate
+```
+
+**Claude Desktop / Cursor / cualquier cliente con `mcpServers`** (`claude_desktop_config.json`, `.mcp.json`, etc.):
+
+```json
+{
+  "mcpServers": {
+    "bcv-exchange-rate": {
+      "command": "npx",
+      "args": ["bcv-exchange-rate"]
+    }
+  }
+}
+```
+
+### Tools disponibles
+
+#### `get_bcv_rates` — Tasas oficiales BCV (Venezuela)
+
+Tasas de cambio oficiales del Banco Central de Venezuela (VES por unidad de divisa) y, opcionalmente, el histórico informativo del sistema bancario.
+
+| Atributo | Tipo | Default | Descripción |
+| --- | --- | --- | --- |
+| `currencies` | `("USD" \| "EUR" \| "CNY" \| "TRY" \| "RUB")[]` | todas | Códigos de moneda a incluir. |
+| `includeCurrent` | `boolean` | `true` | Incluir las tasas actuales de la portada del BCV. |
+| `includeHistory` | `boolean` | `true` | Incluir el histórico bancario. |
+| `days` | `integer ≥ 1` | `7` | Ventana de días del histórico. |
+| `page` | `integer ≥ 0` | `0` | Página del histórico. |
+| `strictSSL` | `boolean` | `false` | Validación TLS. El portal del BCV sirve una cadena de certificados incompleta, por lo que el servidor MCP la desactiva por defecto (la librería mantiene `true`). |
+| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
+| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+
+#### `get_bcv_history` — Histórico bancario BCV (Venezuela)
+
+Solo las tasas informativas históricas del sistema bancario venezolano (compra/venta por banco y fecha).
+
+| Atributo | Tipo | Default | Descripción |
+| --- | --- | --- | --- |
+| `days` | `integer ≥ 1` | `7` | Ventana de días hacia atrás. |
+| `page` | `integer ≥ 0` | `0` | Página del listado. |
+| `strictSSL` | `boolean` | `false` | Validación TLS (ver nota en `get_bcv_rates`). |
+| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
+| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+
+#### `get_trm_rates` — TRM oficial (Colombia)
+
+Tasa Representativa del Mercado (COP por USD) desde el portal de datos abiertos del Gobierno de Colombia (datos.gov.co).
+
+| Atributo | Tipo | Default | Descripción |
+| --- | --- | --- | --- |
+| `limit` | `integer 1-1000` | `10` | Máximo de registros a devolver. |
+| `offset` | `integer ≥ 0` | `0` | Desplazamiento de paginación. |
+| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
+| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+
+#### `get_brl_rates` — Dólar PTAX oficial (Brasil)
+
+Cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos abiertos del Banco Central do Brasil. Devuelve `null` cuando la ventana no contiene cotizaciones (fines de semana o feriados).
+
+| Atributo | Tipo | Default | Descripción |
+| --- | --- | --- | --- |
+| `days` | `integer ≥ 1` | `7` | Ventana de días hacia atrás. |
+| `timeout` | `integer ≥ 1` | `25000` | Timeout de la petición en ms. |
+| `retries` | `integer ≥ 0` | `2` | Reintentos ante fallos transitorios. |
+| `cacheTtlMs` | `integer ≥ 0` | `60000` | TTL de caché fresca en ms; `0` desactiva la caché. |
+
+Todas las tools devuelven el resultado como JSON en el contenido de texto de la respuesta. Los errores de la librería (red, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.
 
 ## Documentación
 
