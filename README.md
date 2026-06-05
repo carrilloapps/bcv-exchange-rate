@@ -183,7 +183,9 @@ Cotización oficial USD/BRL (dólar PTAX, compra y venta) desde la API de datos 
 | `retries`    | `integer ≥ 0`    | `2`             | Reintentos ante fallos transitorios.               |
 | `cacheTtlMs` | `integer ≥ 0`    | `60000`         | TTL de caché fresca en ms; `0` desactiva la caché. |
 
-Todas las tools devuelven el resultado como JSON en el contenido de texto de la respuesta. Los errores de la librería (red, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.
+Todas las tools devuelven el payload por partida doble: como JSON en el contenido de texto y como **`structuredContent.data`** validado contra el **`outputSchema`** que cada tool declara en `tools/list` — el servidor es autodescriptivo y cualquier cliente o agente puede integrarse desde esa respuesta sin documentación externa. Los errores de la librería (red, TLS, validación, parseo) se reportan como respuestas MCP con `isError: true` sin tumbar el servidor.
+
+Especificación completa a nivel de protocolo (handshake, esquemas de salida, intercambios reales y recetas para agentes): [`docs/mcp.md`](./docs/mcp.md).
 
 ## Estructura de respuesta unificada
 

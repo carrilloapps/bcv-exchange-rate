@@ -70,6 +70,39 @@ describe('mcp-server', () => {
         );
     });
 
+    it('declares an output schema for every tool so clients can integrate from tools/list alone', async () => {
+        const { tools } = await client.listTools();
+        for (const tool of tools) {
+            expect(tool.outputSchema).toBeDefined();
+            const out = tool.outputSchema as { properties?: { data?: object } };
+            expect(out.properties?.data).toBeDefined();
+            expect(tool.description?.length ?? 0).toBeGreaterThan(80);
+        }
+    });
+
+    it('returns machine-readable structuredContent.data mirroring the text payload', async () => {
+        mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, {
+            value: [
+                { cotacaoCompra: 5.0409, cotacaoVenda: 5.0415, dataHoraCotacao: '2026-06-03 13:06:26.54' },
+            ],
+        });
+        const result = (await client.callTool({
+            name: 'get_brl_rates',
+            arguments: { days: 7 },
+        })) as ToolTextResult & { structuredContent?: { data: unknown } };
+        expect(result.structuredContent?.data).toEqual(JSON.parse(result.content[0].text));
+    });
+
+    it('represents "no data" as structuredContent.data null', async () => {
+        mock.onGet(/olinda\.bcb\.gov\.br/).reply(200, { value: [] });
+        const result = (await client.callTool({
+            name: 'get_brl_rates',
+            arguments: {},
+        })) as ToolTextResult & { structuredContent?: { data: unknown } };
+        expect(result.isError).toBeFalsy();
+        expect(result.structuredContent?.data).toBeNull();
+    });
+
     it('get_bcv_rates returns current rates as JSON', async () => {
         mock.onGet('https://www.bcv.org.ve/').reply(200, '<div id="dolar"><strong>563,28</strong></div>');
         const result = (await client.callTool({

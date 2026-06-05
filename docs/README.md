@@ -13,6 +13,7 @@ Bienvenido. Esta carpeta contiene la documentación extendida del paquete. El `R
 ### Referencia
 
 - [Referencia de la API](./api-reference.md): todas las funciones, interfaces, el contrato de respuesta unificado y los tipos exportados.
+- [Servidor MCP — especificación de integración](./mcp.md): protocolo, esquemas de entrada/salida, intercambios reales y recetas para agentes de IA.
 - [Arquitectura interna](./architecture.md): estructura de módulos, scraping, reintentos y caché por dentro.
 
 ### Guías temáticas
