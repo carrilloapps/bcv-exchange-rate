@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getBcvRates, getBcvHistory, getTrmRates, getBrlRates, Currency, RequestOptions } from './index';
 
 const SERVER_NAME = 'bcv-exchange-rate';
-const SERVER_VERSION = '2.0.0';
+const SERVER_VERSION = '2.0.1';
 
 const CURRENCY_CODES = ['USD', 'EUR', 'CNY', 'TRY', 'RUB'] as const;
 

@@ -4,6 +4,12 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [2.0.1] - 2026-06-10
+
+### Corregido
+
+- **`Cannot find module 'ajv'` al ejecutar el servidor MCP vía `npx`**: `@modelcontextprotocol/sdk` usa `ajv-formats`, que declara `ajv` como _peerDependency_ opcional y por tanto no se instala de forma transitiva. En instalaciones limpias (`npx -y`) `ajv-formats` quedaba hoisteado junto a un `ajv` incompatible (v6) o ausente, rompiendo el arranque del binario. Se declaran `ajv@^8.17.1` y `ajv-formats@^3.0.1` como dependencias directas para garantizar su presencia y resolución en la raíz de `node_modules`.
+
 ## [2.0.0] - 2026-06-05
 
 ### Cambiado (BREAKING)
