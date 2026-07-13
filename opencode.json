@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "docgraph": {
+      "type": "local",
+      "command": ["npx", "-y", "-p", "@carrilloapps/docgraph", "docgraph-mcp", "serve"],
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# DocGraph data files
+# Local to each machine; only settings.json is shared.
+
+# Index database
+*.db
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+
+# Embedding cache
+embeddings/

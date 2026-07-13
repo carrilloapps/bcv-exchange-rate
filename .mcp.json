@@ -5,6 +5,11 @@
       "command": "codegraph",
       "args": ["serve", "--mcp"]
     },
+    "docgraph": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "-p", "@carrilloapps/docgraph", "docgraph-mcp", "serve"]
+    },
     "skill-rules": {
       "type": "stdio",
       "command": "npx",

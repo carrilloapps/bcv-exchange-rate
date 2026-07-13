@@ -23,7 +23,22 @@ Reglas:
 - Usa Read/Grep crudos solo para confirmar un detalle puntual que codegraph no cubrió.
 - Antes de modificar una función pública, ejecuta `codegraph_impact` para conocer el alcance del cambio.
 
-### 2. Caveman (skill) — comunicación eficiente
+### 2. DocGraph (MCP) — búsqueda en documentación
+
+**Usa docgraph para consultas sobre documentación** (`docs/`, `README`, `CHANGELOG`, specs y guías): responde con búsqueda híbrida full-text + vectorial sobre el índice local (`.docgraph/`). Es complementario a codegraph: codegraph indexa el **código**, docgraph indexa la **documentación**.
+
+| Intención                                             | Herramienta MCP (prefijo `docgraph`) |
+| ----------------------------------------------------- | ------------------------------------ |
+| "¿Dónde se documenta X?", ejemplos, guías, decisiones | `search` (búsqueda híbrida)          |
+| Explorar un tema y sus documentos relacionados        | `explore` / `get_related`            |
+| Recuperar el contenido de un documento indexado       | `get_document`                       |
+
+Reglas:
+
+- Para "¿cómo funciona X en el código?" usa codegraph; para "¿qué dice la doc sobre X?" usa docgraph.
+- El índice se reconstruye con `npx docgraph reindex` tras cambios grandes en `docs/`. `.docgraph/settings.json` se versiona; la base (`docgraph.db`) y los logs son locales.
+
+### 3. Caveman (skill) — comunicación eficiente
 
 **Usa la skill `caveman` por defecto** en las respuestas para reducir ~75% el consumo de tokens manteniendo precisión técnica completa.
 
