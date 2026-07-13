@@ -1,6 +1,6 @@
 {
   "name": "bcv-exchange-rate",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Librería profesional de Node.js y servidor MCP para el rastreo de indicadores económicos oficiales de Venezuela (BCV), Colombia (TRM - COP) y Brasil (PTAX - BRL). Especializada en monedas fronterizas.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -91,6 +91,8 @@
     "ajv-formats": "^3.0.1",
     "axios": "~1.17.0",
     "cheerio": "~1.2.0",
+    "parse5": "^7.3.0",
+    "parse5-htmlparser2-tree-adapter": "^7.1.0",
     "zod": "~4.4.3"
   },
   "peerDependencies": {

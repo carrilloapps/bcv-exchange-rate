@@ -4,6 +4,12 @@ Todos los cambios notables de **bcv-exchange-rate** se documentan en este archiv
 
 El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto se rige por [Versionado semántico](https://semver.org/lang/es/).
 
+## [2.0.2] - 2026-07-13
+
+### Corregido
+
+- **`Cannot find module 'parse5'` al ejecutar el binario vía `npx`**: `cheerio` declara `parse5` como dependencia transitiva. En ciertos árboles de instalación (por ejemplo, cuando el paquete se instala como dependencia de un proyecto que deduplica/hoistea `parse5` hacia su raíz) la copia transitiva quedaba sin resolver desde `cheerio`, rompiendo el arranque del binario y el scraping del BCV. Se declaran `parse5@^7.3.0` y `parse5-htmlparser2-tree-adapter@^7.1.0` como dependencias directas para garantizar su presencia y resolución, siguiendo el mismo criterio aplicado a `ajv`/`ajv-formats` en la 2.0.1.
+
 ## [2.0.1] - 2026-06-10
 
 ### Corregido
@@ -114,5 +120,8 @@ Guía de migración 1.x → 2.0:
 - **Documentación profesional** en `docs/` con guía de inicio, referencia de la API, arquitectura interna, guías temáticas (logging, errores, caché, reintentos, seguridad y TypeScript), ejemplos ejecutables y solución de problemas.
 - Licencia MIT.
 
+[2.0.2]: https://github.com/carrilloapps/bcv-exchange-rate/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/carrilloapps/bcv-exchange-rate/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/carrilloapps/bcv-exchange-rate/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/carrilloapps/bcv-exchange-rate/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/carrilloapps/bcv-exchange-rate/releases/tag/v1.0.0
